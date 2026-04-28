@@ -613,7 +613,7 @@ function selectColor(c) {
 async function saveAisle() {
   const name = document.getElementById('aisleNameInput').value.trim();
   const sort = parseInt(document.getElementById('aisleSortInput').value) || 1;
-  const color = document.querySelector('.color-swatch.selected')?.style.background || COLORS[0];
+  const color = document.querySelector('.color-swatch.selected')?.style.backgroundColor || COLORS[0];
   if (!name) return;
   if (editingAisleId) {
     await db.from('aisles').update({ name, color, sort_order: sort }).eq('id', editingAisleId);
@@ -621,6 +621,8 @@ async function saveAisle() {
     await db.from('aisles').insert({ store_id: aisleModalStoreId, name, color, sort_order: sort });
   }
   closeModal('aisleModal');
+  await loadAll();
+  render();
   showToast(editingAisleId ? '売り場を更新しました' : '売り場を追加しました');
 }
 
@@ -632,6 +634,8 @@ async function saveStore() {
   if (res.data) activeStoreId = res.data.id;
   closeModal('storeModal');
   document.getElementById('storeNameInput').value = '';
+  await loadAll();
+  render();
   showToast(`「${name}」を追加しました`);
 }
 
@@ -649,6 +653,8 @@ async function saveStaple() {
   if (!name || !aisleId) return;
   await db.from('staples').insert({ aisle_id: aisleId, name });
   closeModal('stapleModal');
+  await loadAll();
+  render();
   showToast(`「${name}」を定番リストに追加しました`);
 }
 
