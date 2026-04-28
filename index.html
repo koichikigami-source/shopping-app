@@ -410,13 +410,17 @@ function renderSettings() {
   storeEl.innerHTML = stores.map(s => {
     const storeAisles = aisles.filter(a => a.store_id === s.id);
     return `<div style="border-top:1px solid var(--border);">
-      <div style="padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);">${s.name}</div>
+      <div style="padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);display:flex;align-items:center;">
+        <span style="flex:1">${s.name}</span>
+        <button style="border:none;background:transparent;color:var(--danger);cursor:pointer;font-size:12px;padding:2px 6px;" onclick="deleteStore('${s.id}')">削除</button>
+      </div>
       ${storeAisles.map(a => `
-        <div class="settings-item" onclick="openEditAisle('${a.id}')">
+        <div class="settings-item">
           <div class="settings-item-dot" style="background:${a.color}"></div>
-          <div class="settings-item-name">${a.name}</div>
+          <div class="settings-item-name" style="cursor:pointer;" onclick="openEditAisle('${a.id}')">${a.name}</div>
           <div class="settings-item-meta">順番 ${a.sort_order}</div>
-          <div style="color:var(--text3);font-size:12px;">✏️</div>
+          <div style="color:var(--text3);font-size:12px;cursor:pointer;margin-right:4px;" onclick="openEditAisle('${a.id}')">✏️</div>
+          <button style="border:none;background:transparent;color:var(--danger);cursor:pointer;font-size:13px;padding:2px 6px;" onclick="event.stopPropagation();deleteAisle('${a.id}')">✕</button>
         </div>`).join('')}
       <div class="settings-add-row" onclick="openAddAisle('${s.id}')">＋ 売り場を追加</div>
     </div>`;
@@ -660,6 +664,32 @@ async function saveStaple() {
 
 async function deleteStaple(id) {
   await db.from('staples').delete().eq('id', id);
+  await loadAll();
+  renderSettings();
+}
+
+async function deleteAisle(id) {
+  if (!confirm('この売り場を削除しますか？（関連する定番アイテムも削除されます）')) return;
+  await db.from('staples').delete().eq('aisle_id', id);
+  await db.from('shopping_items').update({ aisle_id: null }).eq('aisle_id', id);
+  await db.from('aisles').delete().eq('id', id);
+  await loadAll();
+  render();
+  showToast('売り場を削除しました');
+}
+
+async function deleteStore(id) {
+  if (!confirm('このスーパーを削除しますか？（すべてのデータが削除されます）')) return;
+  await db.from('shopping_items').delete().eq('store_id', id);
+  const storeAisles = aisles.filter(a => a.store_id === id);
+  for (const a of storeAisles) await db.from('staples').delete().eq('aisle_id', a.id);
+  await db.from('aisles').delete().eq('store_id', id);
+  await db.from('stores').delete().eq('id', id);
+  if (activeStoreId === id) activeStoreId = null;
+  await loadAll();
+  if (!activeStoreId && stores.length) activeStoreId = stores[0].id;
+  render();
+  showToast('スーパーを削除しました');
 }
 
 // --- Settings screen ---
