@@ -2,719 +2,551 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>買い物アプリ</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #f5f4f0;
-  --surface: #ffffff;
-  --surface2: #f0efe9;
-  --border: #e0ddd4;
-  --text: #1a1916;
-  --text2: #6b6860;
-  --text3: #9b9890;
-  --accent: #2d5a27;
-  --accent-light: #e8f0e7;
-  --danger: #c0392b;
-  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --bg:#f5f4f0; --surface:#fff; --surface2:#f0efe9; --border:#e0ddd4;
+  --text:#1a1916; --text2:#6b6860; --text3:#9b9890;
+  --accent:#2d5a27; --accent-light:#e8f0e7;
+  --danger:#c0392b; --radius:12px; --radius-sm:8px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-/* Header */
-.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-.header-actions { display: flex; gap: 8px; }
-.icon-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.15s; }
-.icon-btn:hover { background: var(--border); }
-
-/* Store tabs */
-.store-tabs { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-.store-tabs::-webkit-scrollbar { display: none; }
-.store-tab { padding: 12px 14px; font-size: 13px; font-weight: 500; color: var(--text2); border-bottom: 2px solid transparent; white-space: nowrap; cursor: pointer; transition: color 0.15s; flex-shrink: 0; }
-.store-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.store-tab-add { padding: 12px 10px; color: var(--text3); cursor: pointer; font-size: 18px; flex-shrink: 0; }
-
-/* Main content */
-.main { padding: 12px 16px 100px; max-width: 600px; margin: 0 auto; }
-
-/* Quick add */
-.quick-add { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
-.quick-add-input-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
-.quick-add-input { flex: 1; border: none; background: transparent; font-size: 15px; font-family: inherit; color: var(--text); outline: none; }
-.quick-add-input::placeholder { color: var(--text3); }
-.mic-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; transition: background 0.15s; }
-.mic-btn.recording { background: #fee; color: var(--danger); animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-.add-btn { padding: 6px 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; flex-shrink: 0; font-family: inherit; }
-.quick-add-meta { display: flex; gap: 8px; padding: 0 12px 10px; }
-.meta-select { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; font-size: 12px; font-family: inherit; color: var(--text); background: var(--surface2); outline: none; }
-
-/* Staples panel */
-.staples-toggle { padding: 8px 12px; background: var(--surface2); border-top: 1px solid var(--border); font-size: 12px; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
-.staples-panel { border-top: 1px solid var(--border); padding: 10px 12px; display: none; }
-.staples-panel.open { display: block; }
-.staples-cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.staples-cat-btn { padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; background: var(--surface); color: var(--text2); transition: all 0.15s; }
-.staples-cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-.staples-items { display: flex; gap: 6px; flex-wrap: wrap; }
-.staple-chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 13px; cursor: pointer; background: var(--surface); color: var(--text); transition: all 0.15s; }
-.staple-chip:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Aisle sections */
-.aisle-section { margin-bottom: 8px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-.aisle-header { padding: 10px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.aisle-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.aisle-name { font-size: 13px; font-weight: 600; flex: 1; }
-.aisle-count { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
-.aisle-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
-.aisle-section.collapsed .aisle-chevron { transform: rotate(-90deg); }
-.aisle-items { background: var(--surface); }
-.aisle-section.collapsed .aisle-items { display: none; }
-
-/* Shopping item */
-.shopping-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--border); transition: background 0.15s; }
-.shopping-item.checked { opacity: 0.4; }
-.check-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-.check-circle.done { background: var(--accent); border-color: var(--accent); color: white; font-size: 11px; }
-.item-name { flex: 1; font-size: 14px; }
-.item-name.done { text-decoration: line-through; color: var(--text3); }
-.qty-ctrl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.qty-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.15s; }
-.qty-btn:hover { background: var(--border); }
-.qty-num { font-size: 14px; font-family: 'DM Mono', monospace; min-width: 20px; text-align: center; cursor: pointer; }
-.delete-btn { width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent; color: var(--text3); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
-.shopping-item:hover .delete-btn { opacity: 1; }
-
-/* Empty state */
-.empty { text-align: center; padding: 48px 24px; color: var(--text3); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-.empty-text { font-size: 14px; }
-
-/* FAB */
-.fab { position: fixed; bottom: 24px; right: 24px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(45,90,39,0.35); display: flex; align-items: center; justify-content: center; transition: transform 0.15s; z-index: 50; }
-.fab:hover { transform: scale(1.05); }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 600px; padding: 20px 20px 40px; transform: translateY(20px); transition: transform 0.2s; }
-.modal-overlay.open .modal { transform: translateY(0); }
-.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-.modal-field { margin-bottom: 12px; }
-.modal-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-.modal-input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: inherit; outline: none; background: var(--surface2); }
-.modal-input:focus { border-color: var(--accent); }
-.color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
-.color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
-.color-swatch.selected { border-color: var(--text); }
-.modal-actions { display: flex; gap: 8px; margin-top: 16px; }
-.modal-btn { flex: 1; padding: 11px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: var(--surface2); color: var(--text); }
-.modal-btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-
-/* Toast */
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 300; }
-.toast.show { opacity: 1; }
-
-/* Qty input modal */
-.qty-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-.qty-modal.open { opacity: 1; pointer-events: all; }
-.qty-modal-box { background: var(--surface); border-radius: var(--radius); padding: 20px; width: 200px; text-align: center; }
-.qty-modal-title { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
-.qty-modal-input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font-size: 20px; font-family: 'DM Mono', monospace; text-align: center; outline: none; }
-.qty-modal-input:focus { border-color: var(--accent); }
-.qty-modal-btn { margin-top: 10px; width: 100%; padding: 9px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; font-family: inherit; }
-
-/* Section header with progress */
-.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin: 0 14px 8px; }
-.progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-
-/* Settings screen */
-.settings-screen { display: none; }
-.settings-screen.active { display: block; }
-.main-screen { display: block; }
-.main-screen.hidden { display: none; }
-.settings-section { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
-.settings-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border); cursor: pointer; }
-.settings-item:first-child { border-top: none; }
-.settings-item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.settings-item-name { flex: 1; font-size: 14px; }
-.settings-item-meta { font-size: 12px; color: var(--text3); }
-.settings-add-row { padding: 12px 14px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 500; }
-.back-btn { font-size: 13px; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-title{font-size:17px;font-weight:700;}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.store-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;}
+.store-tabs::-webkit-scrollbar{display:none;}
+.store-tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
+.store-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-badge{background:var(--surface2);color:var(--text2);font-size:11px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;}
+.store-tab.active .tab-badge{background:var(--accent-light);color:var(--accent);}
+.store-tab-add{padding:10px 8px;color:var(--text3);cursor:pointer;font-size:20px;flex-shrink:0;display:flex;align-items:center;}
+.main{padding:12px 16px 120px;max-width:600px;margin:0 auto;}
+.quick-add{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
+.quick-row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
+.q-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--text);outline:none;}
+.q-input::placeholder{color:var(--text3);}
+.mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.mic-btn.rec{background:#fee;color:var(--danger);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.add-btn{padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.quick-meta{display:flex;gap:8px;padding:0 12px 10px;}
+.q-select{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;}
+.staples-toggle{padding:9px 12px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.staples-body{border-top:1px solid var(--border);padding:10px 12px;display:none;}
+.staples-body.open{display:block;}
+.s-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);}
+.s-cat.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.s-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.s-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);}
+.s-chip:active{background:var(--accent-light);border-color:var(--accent);}
+.aisle-sec{margin-bottom:8px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface);}
+.aisle-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.a-name{font-size:13px;font-weight:600;flex:1;}
+.a-cnt{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
+.a-chev{font-size:11px;color:var(--text3);transition:transform .2s;}
+.aisle-sec.collapsed .a-chev{transform:rotate(-90deg);}
+.aisle-sec.collapsed .aisle-body{display:none;}
+.prog-bar{height:3px;background:var(--border);}
+.prog-fill{height:100%;transition:width .4s;}
+.item-wrap{position:relative;overflow:hidden;border-top:1px solid var(--border);}
+.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--danger);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;}
+.s-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
+.s-item.swiped{transform:translateX(-88px);}
+.s-item.faded{opacity:.45;}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.chk.done{background:var(--accent);border-color:var(--accent);color:#fff;font-size:13px;}
+.iname-wrap{flex:1;min-width:0;}
+.iname{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.iname.done{text-decoration:line-through;color:var(--text3);}
+.qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.q-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.q-btn:active{background:var(--border);}
+.q-num{font-size:14px;font-family:'DM Mono',monospace;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--border);}
+.empty{text-align:center;padding:48px 24px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.undo-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.undo-bar.show{opacity:1;pointer-events:all;}
+.undo-btn{color:#7dd87d;font-weight:700;cursor:pointer;border:none;background:transparent;font-size:13px;}
+.settings-screen{display:none;}
+.settings-screen.active{display:block;}
+.main-screen.hidden{display:none;}
+.set-sec{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
+.set-grp-hdr{padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);}
+.set-grp-hdr:first-child{border-top:none;}
+.set-item{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--border);}
+.set-item-name{flex:1;font-size:14px;}
+.set-item-meta{font-size:12px;color:var(--text3);}
+.set-add{padding:13px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);cursor:pointer;color:var(--accent);font-size:13px;font-weight:500;}
+.e-btn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--text3);}
+.d-btn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--danger);font-weight:700;}
+.back-btn{font-size:13px;color:var(--accent);cursor:pointer;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.m-title{font-size:16px;font-weight:700;margin-bottom:16px;}
+.m-field{margin-bottom:12px;}
+.m-label{font-size:12px;color:var(--text2);margin-bottom:5px;}
+.m-input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--surface2);}
+.m-input:focus{border-color:var(--accent);}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.c-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
+.c-swatch.sel{border-color:var(--text);}
+.m-actions{display:flex;gap:8px;margin-top:16px;}
+.m-btn{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--text);}
+.m-btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.qty-modal{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
+.qty-modal.open{opacity:1;pointer-events:all;}
+.qty-box{background:var(--surface);border-radius:var(--radius);padding:24px 20px;width:200px;text-align:center;}
+.qty-title{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.qty-inp{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:24px;font-family:'DM Mono',monospace;text-align:center;outline:none;}
+.qty-inp:focus{border-color:var(--accent);}
+.qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <div id="headerLeft">
-    <div class="header-title">🛒 買い物リスト</div>
-  </div>
-  <div class="header-actions">
-    <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
-  </div>
+  <div id="hdrLeft"><div class="header-title">🛒 買い物リスト</div></div>
+  <button class="icon-btn" id="settingsBtn">⚙️</button>
 </div>
 
-<!-- Main screen -->
 <div class="main-screen" id="mainScreen">
   <div class="store-tabs" id="storeTabs"></div>
   <div class="main" id="mainContent"></div>
 </div>
 
-<!-- Settings screen -->
 <div class="settings-screen" id="settingsScreen">
   <div class="main" style="padding-top:16px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <div class="back-btn" id="backBtn">← 戻る</div>
       <div style="font-size:16px;font-weight:700;">設定</div>
     </div>
-
-    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;padding-left:4px;">スーパー管理</div>
-    <div class="settings-section" id="storeSettings"></div>
-
-    <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;padding-left:4px;">定番リスト管理</div>
-    <div class="settings-section" id="stapleSettings"></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;padding-left:2px;">スーパー・売り場</div>
+    <div class="set-sec" id="storeSettings"></div>
+    <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;padding-left:2px;">定番リスト</div>
+    <div class="set-sec" id="stapleSettings"></div>
   </div>
 </div>
 
-<!-- Add item modal -->
+<!-- Aisle modal -->
 <div class="modal-overlay" id="aisleModal">
   <div class="modal">
-    <div class="modal-title" id="aisleModalTitle">売り場を追加</div>
-    <div class="modal-field">
-      <div class="modal-label">売り場名</div>
-      <input class="modal-input" id="aisleNameInput" placeholder="例：野菜・果物">
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">色</div>
-      <div class="color-picker" id="colorPicker"></div>
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">並び順（数字が小さいほど上）</div>
-      <input class="modal-input" id="aisleSortInput" type="number" placeholder="1" value="1">
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="closeModal('aisleModal')">キャンセル</button>
-      <button class="modal-btn modal-btn-primary" onclick="saveAisle()">保存</button>
+    <div class="m-title" id="aisleMTitle">売り場を追加</div>
+    <div class="m-field"><div class="m-label">売り場名</div><input class="m-input" id="aisleNameIn" placeholder="例：野菜・果物"></div>
+    <div class="m-field"><div class="m-label">色</div><div class="color-picker" id="colorPicker"></div></div>
+    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="aisleSortIn" type="number" value="1"></div>
+    <div class="m-actions">
+      <button class="m-btn" onclick="closeModal('aisleModal')">キャンセル</button>
+      <button class="m-btn m-btn-primary" onclick="saveAisle()">保存</button>
     </div>
   </div>
 </div>
 
+<!-- Store modal -->
 <div class="modal-overlay" id="storeModal">
   <div class="modal">
-    <div class="modal-title">スーパーを追加</div>
-    <div class="modal-field">
-      <div class="modal-label">スーパー名</div>
-      <input class="modal-input" id="storeNameInput" placeholder="例：業務スーパー">
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="closeModal('storeModal')">キャンセル</button>
-      <button class="modal-btn modal-btn-primary" onclick="saveStore()">保存</button>
+    <div class="m-title">スーパーを追加</div>
+    <div class="m-field"><div class="m-label">スーパー名</div><input class="m-input" id="storeNameIn" placeholder="例：業務スーパー"></div>
+    <div class="m-actions">
+      <button class="m-btn" onclick="closeModal('storeModal')">キャンセル</button>
+      <button class="m-btn m-btn-primary" onclick="saveStore()">保存</button>
     </div>
   </div>
 </div>
 
+<!-- Staple modal -->
 <div class="modal-overlay" id="stapleModal">
   <div class="modal">
-    <div class="modal-title">定番アイテムを追加</div>
-    <div class="modal-field">
-      <div class="modal-label">アイテム名</div>
-      <input class="modal-input" id="stapleNameInput" placeholder="例：玉ねぎ">
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">売り場</div>
-      <select class="modal-input" id="stapleAisleSelect"></select>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="closeModal('stapleModal')">キャンセル</button>
-      <button class="modal-btn modal-btn-primary" onclick="saveStaple()">保存</button>
+    <div class="m-title" id="stapleMTitle">定番アイテムを追加</div>
+    <div class="m-field"><div class="m-label">アイテム名</div><input class="m-input" id="stapleNameIn" placeholder="例：玉ねぎ"></div>
+    <div class="m-field"><div class="m-label">売り場</div><select class="m-input" id="stapleAisleIn"></select></div>
+    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="stapleSortIn" type="number" value="1"></div>
+    <div class="m-actions">
+      <button class="m-btn" onclick="closeModal('stapleModal')">キャンセル</button>
+      <button class="m-btn m-btn-primary" onclick="saveStaple()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- Qty input modal -->
+<!-- Qty modal -->
 <div class="qty-modal" id="qtyModal">
-  <div class="qty-modal-box">
-    <div class="qty-modal-title" id="qtyModalTitle">数量を入力</div>
-    <input class="qty-modal-input" id="qtyModalInput" type="number" min="1" value="1">
-    <button class="qty-modal-btn" onclick="saveQtyModal()">OK</button>
+  <div class="qty-box">
+    <div class="qty-title" id="qtyName">数量を入力</div>
+    <input class="qty-inp" id="qtyIn" type="number" min="1" value="1">
+    <button class="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="undo-bar" id="undoBar">
+  <span id="undoMsg">削除しました</span>
+  <button class="undo-btn" onclick="undoDelete()">元に戻す</button>
+</div>
 
 <script>
-const SUPABASE_URL = 'https://pfobhvsslpxuiglfacss.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE';
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SURL='https://pfobhvsslpxuiglfacss.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE';
+const db=supabase.createClient(SURL,SKEY);
+const COLS=['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
 
-const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
+let stores=[],aisles=[],staples=[],items=[];
+let activeStore=null,editAisleId=null,editStapleId=null,aisleStore=null;
+let qtyItemId=null,staplesOpen=false,staplesCat=null;
+let isRec=false,recog=null,undoData=null,undoTimer=null;
 
-let stores = [], aisles = [], staples = [], items = [];
-let activeStoreId = null;
-let editingAisleId = null;
-let qtyModalItemId = null;
-let recognition = null;
-let isRecording = false;
-let staplesOpen = false;
-let activeStaplesCat = null;
-
-// --- Init ---
-async function init() {
+async function init(){
   await loadAll();
-  setupRealtime();
+  db.channel('rt').on('postgres_changes',{event:'*',schema:'public'},async()=>{await loadAll();render();}).subscribe();
   render();
 }
 
-async function loadAll() {
-  const [s, a, st, it] = await Promise.all([
+async function loadAll(){
+  const [s,a,st,it]=await Promise.all([
     db.from('stores').select('*'),
     db.from('aisles').select('*').order('sort_order'),
-    db.from('staples').select('*'),
+    db.from('staples').select('*').order('sort_order'),
     db.from('shopping_items').select('*').order('created_at')
   ]);
-  stores = s.data || [];
-  aisles = a.data || [];
-  staples = st.data || [];
-  items = it.data || [];
-  if (!activeStoreId && stores.length) activeStoreId = stores[0].id;
+  stores=s.data||[];aisles=a.data||[];staples=st.data||[];items=it.data||[];
+  if(!activeStore&&stores.length) activeStore=stores[0].id;
 }
 
-function setupRealtime() {
-  db.channel('shopping').on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-    await loadAll();
-    render();
-  }).subscribe();
+function render(){renderTabs();renderMain();if(document.getElementById('settingsScreen').classList.contains('active'))renderSettings();}
+
+function renderTabs(){
+  const el=document.getElementById('storeTabs');
+  el.innerHTML=stores.map(s=>{
+    const n=items.filter(i=>i.store_id===s.id&&!i.checked).length;
+    return `<div class="store-tab${s.id===activeStore?' active':''}" onclick="setStore('${s.id}')">${s.name}${n?`<span class="tab-badge">${n}</span>`:''}</div>`;
+  }).join('')+'<div class="store-tab-add" onclick="openModal(\'storeModal\')">＋</div>';
 }
 
-// --- Render ---
-function render() {
-  renderStoreTabs();
-  renderMain();
-  renderSettings();
-}
+function renderMain(){
+  const el=document.getElementById('mainContent');
+  if(!activeStore){el.innerHTML='<div class="empty"><div class="empty-icon">🏪</div><div>⚙️設定からスーパーを追加してください</div></div>';return;}
+  const sa=aisles.filter(a=>a.store_id===activeStore);
+  const si=items.filter(i=>i.store_id===activeStore);
+  const ss=staples.filter(s=>sa.find(a=>a.id===s.aisle_id));
 
-function renderStoreTabs() {
-  const el = document.getElementById('storeTabs');
-  el.innerHTML = stores.map(s =>
-    `<div class="store-tab ${s.id===activeStoreId?'active':''}" onclick="setStore('${s.id}')">${s.name}</div>`
-  ).join('') + `<div class="store-tab-add" onclick="openModal('storeModal')">＋</div>`;
-}
-
-function renderMain() {
-  const el = document.getElementById('mainContent');
-  if (!activeStoreId) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🏪</div><div class="empty-text">スーパーを追加してください</div></div>`;
-    return;
-  }
-  const storeAisles = aisles.filter(a => a.store_id === activeStoreId);
-  const storeItems = items.filter(i => i.store_id === activeStoreId);
-  const storeStaples = staples.filter(s => storeAisles.find(a => a.id === s.aisle_id));
-
-  // Quick add
-  let html = `<div class="quick-add">
-    <div class="quick-add-input-row">
-      <input class="quick-add-input" id="quickInput" placeholder="アイテムを追加..." onkeydown="if(event.key==='Enter')quickAdd()">
-      <button class="mic-btn ${isRecording?'recording':''}" id="micBtn" onclick="toggleMic()" title="音声入力">🎤</button>
-      <button class="add-btn" onclick="quickAdd()">追加</button>
+  let html=`<div class="quick-add">
+    <div class="quick-row">
+      <input class="q-input" id="qIn" placeholder="アイテムを追加..." onkeydown="if(event.key==='Enter')doAdd()">
+      <button class="mic-btn${isRec?' rec':''}" id="micB" onclick="toggleMic()">🎤</button>
+      <button class="add-btn" onclick="doAdd()">追加</button>
     </div>
-    <div class="quick-add-meta">
-      <select class="meta-select" id="quickAisle">
-        <option value="">売り場を選択</option>
-        ${storeAisles.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}
+    <div class="quick-meta">
+      <select class="q-select" id="qAisle">
+        <option value="">売り場（未分類）</option>
+        ${sa.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}
       </select>
     </div>
     <div class="staples-toggle" onclick="toggleStaples()">
-      <span>定番リストから追加</span>
-      <span id="staplesArrow">${staplesOpen?'▲':'▼'}</span>
+      <span>📋 定番リストから追加</span><span>${staplesOpen?'▲':'▼'}</span>
     </div>
-    <div class="staples-panel ${staplesOpen?'open':''}" id="staplesPanel">
-      <div class="staples-cats">
-        <div class="staples-cat-btn ${activeStaplesCat===null?'active':''}" onclick="setStaplesCat(null)">すべて</div>
-        ${storeAisles.map(a=>`<div class="staples-cat-btn ${activeStaplesCat===a.id?'active':''}" onclick="setStaplesCat('${a.id}')" style="border-color:${a.color}20;${activeStaplesCat===a.id?`background:${a.color};color:white;border-color:${a.color}`:'color:'+a.color}">${a.name}</div>`).join('')}
+    <div class="staples-body${staplesOpen?' open':''}">
+      <div class="s-cats">
+        <div class="s-cat${staplesCat===null?' active':''}" onclick="setCat(null)">すべて</div>
+        ${sa.map(a=>`<div class="s-cat${staplesCat===a.id?' active':''}" onclick="setCat('${a.id}')" style="${staplesCat===a.id?`background:${a.color};border-color:${a.color};color:#fff`:`color:${a.color};border-color:${a.color}40`}">${a.name}</div>`).join('')}
       </div>
-      <div class="staples-items">
-        ${storeStaples.filter(s=>activeStaplesCat===null||s.aisle_id===activeStaplesCat).map(s=>
-          `<div class="staple-chip" onclick="addStaple('${s.id}')">${s.name}</div>`
-        ).join('')}
-        ${storeStaples.filter(s=>activeStaplesCat===null||s.aisle_id===activeStaplesCat).length===0?'<span style="color:var(--text3);font-size:13px;">定番アイテムがありません</span>':''}
+      <div class="s-chips">
+        ${(ss.filter(s=>staplesCat===null||s.aisle_id===staplesCat)).map(s=>`<div class="s-chip" onclick="addStaple('${s.id}')">${s.name}</div>`).join('')||'<span style="color:var(--text3);font-size:13px;">定番アイテムがありません</span>'}
       </div>
     </div>
   </div>`;
 
-  // Items by aisle
-  if (storeItems.length === 0) {
-    html += `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">リストは空です</div></div>`;
-  } else {
-    // Items with aisle
-    storeAisles.forEach(aisle => {
-      const aisleItems = storeItems.filter(i => i.aisle_id === aisle.id);
-      if (!aisleItems.length) return;
-      const checked = aisleItems.filter(i=>i.checked).length;
-      const pct = aisleItems.length ? (checked/aisleItems.length*100) : 0;
-      html += `<div class="aisle-section" id="aisle-${aisle.id}">
-        <div class="aisle-header" style="background:${aisle.color}14;" onclick="toggleAisle('${aisle.id}')">
-          <div class="aisle-dot" style="background:${aisle.color}"></div>
-          <div class="aisle-name">${aisle.name}</div>
-          <div class="aisle-count">${checked}/${aisleItems.length}</div>
-          <div class="aisle-chevron">▾</div>
+  if(!si.length){html+='<div class="empty"><div class="empty-icon">✅</div><div>リストは空です</div></div>';}
+  else{
+    sa.forEach(a=>{
+      const ai=si.filter(i=>i.aisle_id===a.id);
+      if(!ai.length)return;
+      const done=ai.filter(i=>i.checked).length;
+      html+=`<div class="aisle-sec" id="sec-${a.id}">
+        <div class="aisle-hdr" style="background:${a.color}12;" onclick="togAisle('${a.id}')">
+          <div class="a-dot" style="background:${a.color}"></div>
+          <div class="a-name">${a.name}</div>
+          <div class="a-cnt">${done}/${ai.length}</div>
+          <div class="a-chev">▾</div>
         </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${aisle.color}"></div></div>
-        <div class="aisle-items">
-          ${aisleItems.map(item => renderItem(item)).join('')}
-        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${ai.length?done/ai.length*100:0}%;background:${a.color}50"></div></div>
+        <div class="aisle-body">${ai.map(renderItem).join('')}</div>
       </div>`;
     });
-
-    // Items without aisle
-    const noAisle = storeItems.filter(i => !i.aisle_id);
-    if (noAisle.length) {
-      html += `<div class="aisle-section" id="aisle-none">
-        <div class="aisle-header" style="background:#f0f0f0;" onclick="toggleAisle('none')">
-          <div class="aisle-dot" style="background:#999"></div>
-          <div class="aisle-name">未分類</div>
-          <div class="aisle-count">${noAisle.length}</div>
-          <div class="aisle-chevron">▾</div>
+    const na=si.filter(i=>!i.aisle_id);
+    if(na.length){
+      html+=`<div class="aisle-sec" id="sec-none">
+        <div class="aisle-hdr" style="background:#f0f0f0;" onclick="togAisle('none')">
+          <div class="a-dot" style="background:#999"></div>
+          <div class="a-name">未分類</div>
+          <div class="a-cnt">${na.length}</div>
+          <div class="a-chev">▾</div>
         </div>
-        <div class="aisle-items">${noAisle.map(item => renderItem(item)).join('')}</div>
+        <div class="aisle-body">${na.map(renderItem).join('')}</div>
       </div>`;
     }
   }
-
-  el.innerHTML = html;
+  el.innerHTML=html;
+  attachSwipe();
 }
 
-function renderItem(item) {
-  return `<div class="shopping-item ${item.checked?'checked':''}" id="item-${item.id}">
-    <div class="check-circle ${item.checked?'done':''}" onclick="toggleCheck('${item.id}')">${item.checked?'✓':''}</div>
-    <div class="item-name ${item.checked?'done':''}">${item.name}</div>
-    <div class="qty-ctrl">
-      <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
-      <div class="qty-num" onclick="openQtyModal('${item.id}','${item.name}',${item.quantity})">${item.quantity}</div>
-      <button class="qty-btn" onclick="changeQty('${item.id}',1)">＋</button>
+function renderItem(it){
+  return `<div class="item-wrap" id="w-${it.id}">
+    <div class="del-bg" onclick="swipeDel('${it.id}')">削除</div>
+    <div class="s-item${it.checked?' faded':''}" id="i-${it.id}">
+      <div class="chk${it.checked?' done':''}" onclick="togChk('${it.id}')">${it.checked?'✓':''}</div>
+      <div class="iname-wrap"><div class="iname${it.checked?' done':''}">${it.name}</div></div>
+      <div class="qty-ctrl">
+        <button class="q-btn" onclick="chgQty('${it.id}',-1)">−</button>
+        <div class="q-num" onclick="openQty('${it.id}','${it.name.replace(/'/g,"\\'")}',${it.quantity})">${it.quantity}</div>
+        <button class="q-btn" onclick="chgQty('${it.id}',1)">＋</button>
+      </div>
     </div>
-    <button class="delete-btn" onclick="deleteItem('${item.id}')">✕</button>
   </div>`;
 }
 
-function renderSettings() {
-  const storeEl = document.getElementById('storeSettings');
-  const stapleEl = document.getElementById('stapleSettings');
-  if (!storeEl || !stapleEl) return;
-
-  storeEl.innerHTML = stores.map(s => {
-    const storeAisles = aisles.filter(a => a.store_id === s.id);
-    return `<div style="border-top:1px solid var(--border);">
-      <div style="padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);display:flex;align-items:center;">
-        <span style="flex:1">${s.name}</span>
-        <button style="border:none;background:transparent;color:var(--danger);cursor:pointer;font-size:12px;padding:2px 6px;" onclick="deleteStore('${s.id}')">削除</button>
-      </div>
-      ${storeAisles.map(a => `
-        <div class="settings-item">
-          <div class="settings-item-dot" style="background:${a.color}"></div>
-          <div class="settings-item-name" style="cursor:pointer;" onclick="openEditAisle('${a.id}')">${a.name}</div>
-          <div class="settings-item-meta">順番 ${a.sort_order}</div>
-          <div style="color:var(--text3);font-size:12px;cursor:pointer;margin-right:4px;" onclick="openEditAisle('${a.id}')">✏️</div>
-          <button style="border:none;background:transparent;color:var(--danger);cursor:pointer;font-size:13px;padding:2px 6px;" onclick="event.stopPropagation();deleteAisle('${a.id}')">✕</button>
-        </div>`).join('')}
-      <div class="settings-add-row" onclick="openAddAisle('${s.id}')">＋ 売り場を追加</div>
-    </div>`;
-  }).join('') + `<div class="settings-add-row" onclick="openModal('storeModal')">＋ スーパーを追加</div>`;
-
-  stapleEl.innerHTML = aisles.map(a => {
-    const aStaples = staples.filter(s => s.aisle_id === a.id);
-    if (!aStaples.length) return '';
-    return `<div style="border-top:1px solid var(--border);">
-      <div style="padding:8px 14px;font-size:12px;font-weight:600;color:${a.color};background:${a.color}12;">${a.name}</div>
-      ${aStaples.map(s => `
-        <div class="settings-item">
-          <div class="settings-item-name" style="font-size:13px;">${s.name}</div>
-          <button style="border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;" onclick="deleteStaple('${s.id}')">✕</button>
-        </div>`).join('')}
-    </div>`;
-  }).join('') + `<div class="settings-add-row" onclick="openAddStaple()">＋ 定番アイテムを追加</div>`;
-}
-
-// --- Actions ---
-function setStore(id) {
-  activeStoreId = id;
-  render();
-}
-
-async function quickAdd() {
-  const input = document.getElementById('quickInput');
-  const aisleSelect = document.getElementById('quickAisle');
-  const name = input.value.trim();
-  if (!name || !activeStoreId) return;
-  await db.from('shopping_items').insert({
-    store_id: activeStoreId,
-    aisle_id: aisleSelect.value || null,
-    name,
-    quantity: 1,
-    checked: false
-  });
-  input.value = '';
-  showToast(`「${name}」を追加しました`);
-}
-
-async function addStaple(stapleId) {
-  const staple = staples.find(s => s.id === stapleId);
-  if (!staple || !activeStoreId) return;
-  const existing = items.find(i => i.store_id === activeStoreId && i.name === staple.name && !i.checked);
-  if (existing) {
-    await db.from('shopping_items').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-  } else {
-    await db.from('shopping_items').insert({
-      store_id: activeStoreId,
-      aisle_id: staple.aisle_id,
-      name: staple.name,
-      quantity: 1,
-      checked: false
+function attachSwipe(){
+  document.querySelectorAll('.s-item').forEach(el=>{
+    let sx=0,sy=0,dx=0,was=false;
+    el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;was=el.classList.contains('swiped');},{passive:true});
+    el.addEventListener('touchmove',e=>{
+      dx=e.touches[0].clientX-sx;
+      if(Math.abs(e.touches[0].clientY-sy)>Math.abs(dx))return;
+      const mv=was?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
+      el.style.transition='none';
+      el.style.transform=`translateX(${mv}px)`;
+    },{passive:true});
+    el.addEventListener('touchend',()=>{
+      el.style.transition='transform .2s';
+      if(!was&&dx<-44){el.style.transform='translateX(-88px)';el.classList.add('swiped');}
+      else if(was&&dx>44){el.style.transform='translateX(0)';el.classList.remove('swiped');}
+      else{el.style.transform=was?'translateX(-88px)':'translateX(0)';}
     });
-  }
-  showToast(`「${staple.name}」を追加しました`);
-}
-
-async function toggleCheck(id) {
-  const item = items.find(i => i.id === id);
-  if (!item) return;
-  await db.from('shopping_items').update({ checked: !item.checked }).eq('id', id);
-}
-
-async function changeQty(id, delta) {
-  const item = items.find(i => i.id === id);
-  if (!item) return;
-  const newQty = Math.max(1, item.quantity + delta);
-  await db.from('shopping_items').update({ quantity: newQty }).eq('id', id);
-}
-
-async function deleteItem(id) {
-  await db.from('shopping_items').delete().eq('id', id);
-}
-
-function openQtyModal(id, name, qty) {
-  qtyModalItemId = id;
-  document.getElementById('qtyModalTitle').textContent = name;
-  document.getElementById('qtyModalInput').value = qty;
-  document.getElementById('qtyModal').classList.add('open');
-  setTimeout(() => document.getElementById('qtyModalInput').select(), 100);
-}
-
-async function saveQtyModal() {
-  const qty = parseInt(document.getElementById('qtyModalInput').value) || 1;
-  if (qtyModalItemId) {
-    await db.from('shopping_items').update({ quantity: Math.max(1, qty) }).eq('id', qtyModalItemId);
-  }
-  document.getElementById('qtyModal').classList.remove('open');
-  qtyModalItemId = null;
-}
-
-document.getElementById('qtyModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('qtyModal')) document.getElementById('qtyModal').classList.remove('open');
-});
-document.getElementById('qtyModalInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveQtyModal();
-});
-
-// --- Voice input ---
-function toggleMic() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    showToast('このブラウザは音声入力に対応していません');
-    return;
-  }
-  if (isRecording) {
-    recognition.stop();
-    return;
-  }
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SR();
-  recognition.lang = 'ja-JP';
-  recognition.onresult = e => {
-    document.getElementById('quickInput').value = e.results[0][0].transcript;
-  };
-  recognition.onend = () => {
-    isRecording = false;
-    document.getElementById('micBtn').classList.remove('recording');
-  };
-  recognition.start();
-  isRecording = true;
-  document.getElementById('micBtn').classList.add('recording');
-}
-
-// --- Staples panel ---
-function toggleStaples() {
-  staplesOpen = !staplesOpen;
-  renderMain();
-}
-
-function setStaplesCat(id) {
-  activeStaplesCat = id;
-  renderMain();
-}
-
-// --- Aisle collapse ---
-function toggleAisle(id) {
-  const el = document.getElementById(`aisle-${id}`);
-  if (el) el.classList.toggle('collapsed');
-}
-
-// --- Modal helpers ---
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  editingAisleId = null;
-}
-
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => {
-    if (e.target === el) el.classList.remove('open');
   });
-});
-
-// --- Aisle modal ---
-let aisleModalStoreId = null;
-
-function openAddAisle(storeId) {
-  aisleModalStoreId = storeId;
-  editingAisleId = null;
-  document.getElementById('aisleModalTitle').textContent = '売り場を追加';
-  document.getElementById('aisleNameInput').value = '';
-  document.getElementById('aisleSortInput').value = aisles.filter(a=>a.store_id===storeId).length + 1;
-  renderColorPicker(COLORS[0]);
-  openModal('aisleModal');
 }
 
-function openEditAisle(id) {
-  const aisle = aisles.find(a => a.id === id);
-  if (!aisle) return;
-  editingAisleId = id;
-  aisleModalStoreId = aisle.store_id;
-  document.getElementById('aisleModalTitle').textContent = '売り場を編集';
-  document.getElementById('aisleNameInput').value = aisle.name;
-  document.getElementById('aisleSortInput').value = aisle.sort_order;
-  renderColorPicker(aisle.color);
-  openModal('aisleModal');
+async function swipeDel(id){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  undoData={...it};
+  await db.from('shopping_items').delete().eq('id',id);
+  if(undoTimer)clearTimeout(undoTimer);
+  document.getElementById('undoMsg').textContent=`「${it.name}」を削除`;
+  document.getElementById('undoBar').classList.add('show');
+  undoTimer=setTimeout(()=>{document.getElementById('undoBar').classList.remove('show');undoData=null;},4000);
+}
+async function undoDelete(){
+  if(!undoData)return;
+  const{id,...r}=undoData;
+  await db.from('shopping_items').insert(r);
+  document.getElementById('undoBar').classList.remove('show');
+  undoData=null;if(undoTimer)clearTimeout(undoTimer);
 }
 
-function renderColorPicker(selected) {
-  document.getElementById('colorPicker').innerHTML = COLORS.map(c =>
-    `<div class="color-swatch ${c===selected?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
-  ).join('');
-}
+function setStore(id){activeStore=id;render();}
 
-function selectColor(c) {
-  renderColorPicker(c);
-}
-
-async function saveAisle() {
-  const name = document.getElementById('aisleNameInput').value.trim();
-  const sort = parseInt(document.getElementById('aisleSortInput').value) || 1;
-  const color = document.querySelector('.color-swatch.selected')?.style.backgroundColor || COLORS[0];
-  if (!name) return;
-  if (editingAisleId) {
-    await db.from('aisles').update({ name, color, sort_order: sort }).eq('id', editingAisleId);
-  } else {
-    await db.from('aisles').insert({ store_id: aisleModalStoreId, name, color, sort_order: sort });
+async function doAdd(){
+  const inp=document.getElementById('qIn');
+  const name=inp.value.trim();
+  if(!name||!activeStore)return;
+  const aid=document.getElementById('qAisle').value||null;
+  await db.from('shopping_items').insert({store_id:activeStore,aisle_id:aid,name,quantity:1,checked:false});
+  if(aid){
+    const already=staples.find(s=>s.name===name&&s.aisle_id===aid);
+    if(!already){
+      const mx=Math.max(0,...staples.filter(s=>s.aisle_id===aid).map(s=>s.sort_order||0));
+      await db.from('staples').insert({aisle_id:aid,name,sort_order:mx+1});
+    }
   }
-  closeModal('aisleModal');
-  await loadAll();
-  render();
-  showToast(editingAisleId ? '売り場を更新しました' : '売り場を追加しました');
+  inp.value='';
+  await loadAll();render();
 }
 
-// --- Store modal ---
-async function saveStore() {
-  const name = document.getElementById('storeNameInput').value.trim();
-  if (!name) return;
-  const res = await db.from('stores').insert({ name }).select().single();
-  if (res.data) activeStoreId = res.data.id;
-  closeModal('storeModal');
-  document.getElementById('storeNameInput').value = '';
-  await loadAll();
-  render();
-  showToast(`「${name}」を追加しました`);
+async function addStaple(sid){
+  const s=staples.find(x=>x.id===sid);if(!s||!activeStore)return;
+  const ex=items.find(i=>i.store_id===activeStore&&i.name===s.name&&!i.checked);
+  if(ex)await db.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
+  else await db.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:1,checked:false});
 }
 
-// --- Staple modal ---
-function openAddStaple() {
-  const select = document.getElementById('stapleAisleSelect');
-  select.innerHTML = aisles.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-  document.getElementById('stapleNameInput').value = '';
+async function togChk(id){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  await db.from('shopping_items').update({checked:!it.checked}).eq('id',id);
+}
+async function chgQty(id,d){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  await db.from('shopping_items').update({quantity:Math.max(1,it.quantity+d)}).eq('id',id);
+}
+function openQty(id,name,qty){
+  qtyItemId=id;
+  document.getElementById('qtyName').textContent=name;
+  document.getElementById('qtyIn').value=qty;
+  document.getElementById('qtyModal').classList.add('open');
+  setTimeout(()=>document.getElementById('qtyIn').select(),100);
+}
+async function saveQty(){
+  const q=parseInt(document.getElementById('qtyIn').value)||1;
+  if(qtyItemId)await db.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
+  document.getElementById('qtyModal').classList.remove('open');qtyItemId=null;
+}
+document.getElementById('qtyModal').addEventListener('click',e=>{if(e.target===document.getElementById('qtyModal'))document.getElementById('qtyModal').classList.remove('open');});
+document.getElementById('qtyIn').addEventListener('keydown',e=>{if(e.key==='Enter')saveQty();});
+
+function toggleStaples(){staplesOpen=!staplesOpen;renderMain();}
+function setCat(id){staplesCat=id;renderMain();}
+function togAisle(id){const el=document.getElementById(`sec-${id}`);if(el)el.classList.toggle('collapsed');}
+
+function toggleMic(){
+  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){alert('このブラウザは音声入力に対応していません');return;}
+  if(isRec){recog.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR();recog.lang='ja-JP';
+  recog.onresult=e=>{document.getElementById('qIn').value=e.results[0][0].transcript;};
+  recog.onend=()=>{isRec=false;document.getElementById('micB').classList.remove('rec');};
+  recog.start();isRec=true;document.getElementById('micB').classList.add('rec');
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');editAisleId=null;editStapleId=null;}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+function openAddAisle(sid){
+  aisleStore=sid;editAisleId=null;
+  document.getElementById('aisleMTitle').textContent='売り場を追加';
+  document.getElementById('aisleNameIn').value='';
+  document.getElementById('aisleSortIn').value=aisles.filter(a=>a.store_id===sid).length+1;
+  renderCP(COLS[0]);openModal('aisleModal');
+}
+function openEditAisle(id){
+  const a=aisles.find(x=>x.id===id);if(!a)return;
+  editAisleId=id;aisleStore=a.store_id;
+  document.getElementById('aisleMTitle').textContent='売り場を編集';
+  document.getElementById('aisleNameIn').value=a.name;
+  document.getElementById('aisleSortIn').value=a.sort_order;
+  renderCP(a.color);openModal('aisleModal');
+}
+function renderCP(sel){
+  document.getElementById('colorPicker').innerHTML=COLS.map(c=>`<div class="c-swatch${c===sel?' sel':''}" style="background:${c}" onclick="selCol('${c}')"></div>`).join('');
+}
+function selCol(c){renderCP(c);}
+async function saveAisle(){
+  const name=document.getElementById('aisleNameIn').value.trim();
+  const sort=parseInt(document.getElementById('aisleSortIn').value)||1;
+  const color=document.querySelector('.c-swatch.sel')?.style.backgroundColor||COLS[0];
+  if(!name)return;
+  if(editAisleId)await db.from('aisles').update({name,color,sort_order:sort}).eq('id',editAisleId);
+  else await db.from('aisles').insert({store_id:aisleStore,name,color,sort_order:sort});
+  closeModal('aisleModal');await loadAll();render();
+}
+async function deleteAisle(id){
+  if(!confirm('この売り場を削除しますか？'))return;
+  await db.from('staples').delete().eq('aisle_id',id);
+  await db.from('shopping_items').update({aisle_id:null}).eq('aisle_id',id);
+  await db.from('aisles').delete().eq('id',id);
+  await loadAll();render();
+}
+
+async function saveStore(){
+  const name=document.getElementById('storeNameIn').value.trim();if(!name)return;
+  const r=await db.from('stores').insert({name}).select().single();
+  if(r.data)activeStore=r.data.id;
+  closeModal('storeModal');document.getElementById('storeNameIn').value='';
+  await loadAll();render();
+}
+async function deleteStore(id){
+  if(!confirm('このスーパーを削除しますか？'))return;
+  await db.from('shopping_items').delete().eq('store_id',id);
+  const sa=aisles.filter(a=>a.store_id===id);
+  for(const a of sa)await db.from('staples').delete().eq('aisle_id',a.id);
+  await db.from('aisles').delete().eq('store_id',id);
+  await db.from('stores').delete().eq('id',id);
+  if(activeStore===id)activeStore=null;
+  await loadAll();if(!activeStore&&stores.length)activeStore=stores[0].id;render();
+}
+
+function openAddStaple(){
+  editStapleId=null;
+  document.getElementById('stapleMTitle').textContent='定番アイテムを追加';
+  document.getElementById('stapleNameIn').value='';
+  document.getElementById('stapleAisleIn').innerHTML=aisles.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+  document.getElementById('stapleSortIn').value=1;
   openModal('stapleModal');
 }
-
-async function saveStaple() {
-  const name = document.getElementById('stapleNameInput').value.trim();
-  const aisleId = document.getElementById('stapleAisleSelect').value;
-  if (!name || !aisleId) return;
-  await db.from('staples').insert({ aisle_id: aisleId, name });
-  closeModal('stapleModal');
-  await loadAll();
-  render();
-  showToast(`「${name}」を定番リストに追加しました`);
+function openEditStaple(id){
+  const s=staples.find(x=>x.id===id);if(!s)return;
+  editStapleId=id;
+  document.getElementById('stapleMTitle').textContent='定番アイテムを編集';
+  document.getElementById('stapleNameIn').value=s.name;
+  document.getElementById('stapleAisleIn').innerHTML=aisles.map(a=>`<option value="${a.id}"${a.id===s.aisle_id?' selected':''}>${a.name}</option>`).join('');
+  document.getElementById('stapleSortIn').value=s.sort_order||1;
+  openModal('stapleModal');
+}
+async function saveStaple(){
+  const name=document.getElementById('stapleNameIn').value.trim();
+  const aid=document.getElementById('stapleAisleIn').value;
+  const sort=parseInt(document.getElementById('stapleSortIn').value)||1;
+  if(!name||!aid)return;
+  if(editStapleId)await db.from('staples').update({name,aisle_id:aid,sort_order:sort}).eq('id',editStapleId);
+  else await db.from('staples').insert({aisle_id:aid,name,sort_order:sort});
+  closeModal('stapleModal');await loadAll();render();
+}
+async function deleteStaple(id){
+  if(!confirm('この定番アイテムを削除しますか？'))return;
+  await db.from('staples').delete().eq('id',id);
+  await loadAll();render();
 }
 
-async function deleteStaple(id) {
-  await db.from('staples').delete().eq('id', id);
-  await loadAll();
-  renderSettings();
+function renderSettings(){
+  const se=document.getElementById('storeSettings');
+  const ste=document.getElementById('stapleSettings');
+  se.innerHTML=stores.map(s=>{
+    const sa=aisles.filter(a=>a.store_id===s.id);
+    return `<div>
+      <div class="set-grp-hdr"><span style="flex:1">${s.name}</span><button class="d-btn" onclick="deleteStore('${s.id}')">削除</button></div>
+      ${sa.map(a=>`<div class="set-item">
+        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
+        <div class="set-item-name">${a.name}</div>
+        <div class="set-item-meta">順${a.sort_order}</div>
+        <button class="e-btn" onclick="openEditAisle('${a.id}')">✏️</button>
+        <button class="d-btn" onclick="deleteAisle('${a.id}')">✕</button>
+      </div>`).join('')}
+      <div class="set-add" onclick="openAddAisle('${s.id}')">＋ 売り場を追加</div>
+    </div>`;
+  }).join('')+'<div class="set-add" onclick="openModal(\'storeModal\')">＋ スーパーを追加</div>';
+
+  ste.innerHTML=aisles.map(a=>{
+    const as=staples.filter(s=>s.aisle_id===a.id).sort((x,y)=>(x.sort_order||0)-(y.sort_order||0));
+    if(!as.length)return '';
+    return `<div>
+      <div class="set-grp-hdr" style="color:${a.color}">
+        <div style="width:8px;height:8px;border-radius:50%;background:${a.color};margin-right:6px;flex-shrink:0"></div>${a.name}
+      </div>
+      ${as.map(s=>`<div class="set-item">
+        <div class="set-item-name">${s.name}</div>
+        <div class="set-item-meta">順${s.sort_order||'-'}</div>
+        <button class="e-btn" onclick="openEditStaple('${s.id}')">✏️</button>
+        <button class="d-btn" onclick="deleteStaple('${s.id}')">✕</button>
+      </div>`).join('')}
+    </div>`;
+  }).join('')+'<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
 }
 
-async function deleteAisle(id) {
-  if (!confirm('この売り場を削除しますか？（関連する定番アイテムも削除されます）')) return;
-  await db.from('staples').delete().eq('aisle_id', id);
-  await db.from('shopping_items').update({ aisle_id: null }).eq('aisle_id', id);
-  await db.from('aisles').delete().eq('id', id);
-  await loadAll();
-  render();
-  showToast('売り場を削除しました');
-}
-
-async function deleteStore(id) {
-  if (!confirm('このスーパーを削除しますか？（すべてのデータが削除されます）')) return;
-  await db.from('shopping_items').delete().eq('store_id', id);
-  const storeAisles = aisles.filter(a => a.store_id === id);
-  for (const a of storeAisles) await db.from('staples').delete().eq('aisle_id', a.id);
-  await db.from('aisles').delete().eq('store_id', id);
-  await db.from('stores').delete().eq('id', id);
-  if (activeStoreId === id) activeStoreId = null;
-  await loadAll();
-  if (!activeStoreId && stores.length) activeStoreId = stores[0].id;
-  render();
-  showToast('スーパーを削除しました');
-}
-
-// --- Settings screen ---
-document.getElementById('settingsBtn').addEventListener('click', () => {
+document.getElementById('settingsBtn').addEventListener('click',()=>{
   document.getElementById('mainScreen').classList.add('hidden');
   document.getElementById('settingsScreen').classList.add('active');
-  document.getElementById('headerLeft').innerHTML = '';
-  document.getElementById('settingsBtn').style.display = 'none';
+  document.getElementById('hdrLeft').innerHTML='';
+  document.getElementById('settingsBtn').style.display='none';
   renderSettings();
 });
-
-document.getElementById('backBtn').addEventListener('click', () => {
+document.getElementById('backBtn').addEventListener('click',()=>{
   document.getElementById('mainScreen').classList.remove('hidden');
   document.getElementById('settingsScreen').classList.remove('active');
-  document.getElementById('headerLeft').innerHTML = '<div class="header-title">🛒 買い物リスト</div>';
-  document.getElementById('settingsBtn').style.display = '';
+  document.getElementById('hdrLeft').innerHTML='<div class="header-title">🛒 買い物リスト</div>';
+  document.getElementById('settingsBtn').style.display='';
 });
-
-// --- Toast ---
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
 
 init();
 </script>
