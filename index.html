@@ -7,69 +7,67 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#f5f4f0;--white:#fff;--gray1:#f0efe9;--gray2:#e0ddd4;--gray3:#9b9890;--text:#1a1916;--text2:#6b6860;--green:#2d5a27;--green2:#e8f0e7;--red:#c0392b;--r:12px;--rs:8px;}
+:root{--bg:#f5f4f0;--w:#fff;--g1:#f0efe9;--g2:#e0ddd4;--g3:#9b9890;--tx:#1a1916;--tx2:#6b6860;--gn:#2d5a27;--gn2:#e8f0e7;--rd:#c0392b;--r:12px;--rs:8px;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-/* header */
-#hdr{background:var(--white);border-bottom:1px solid var(--gray2);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:100;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+#hdr{background:var(--w);border-bottom:1px solid var(--g2);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:100;}
 #hdr-title{font-size:17px;font-weight:700;}
-#settings-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--gray1);cursor:pointer;font-size:16px;}
-/* tabs */
-#tabs{background:var(--white);border-bottom:1px solid var(--gray2);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;padding:0 12px;}
+#settings-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--g1);cursor:pointer;font-size:16px;}
+#tabs{background:var(--w);border-bottom:1px solid var(--g2);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;padding:0 12px;}
 #tabs::-webkit-scrollbar{display:none;}
-.tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
-.tab.on{color:var(--green);border-bottom-color:var(--green);}
-.tab-n{background:var(--gray1);color:var(--text2);font-size:11px;padding:1px 6px;border-radius:10px;}
-.tab.on .tab-n{background:var(--green2);color:var(--green);}
-#tab-add{padding:10px 8px;font-size:20px;color:var(--gray3);cursor:pointer;display:flex;align-items:center;}
-/* main */
+.tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--tx2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
+.tab.on{color:var(--gn);border-bottom-color:var(--gn);}
+.tab-n{background:var(--g1);color:var(--tx2);font-size:11px;padding:1px 6px;border-radius:10px;}
+.tab.on .tab-n{background:var(--gn2);color:var(--gn);}
+#tab-add{padding:10px 8px;font-size:20px;color:var(--g3);cursor:pointer;display:flex;align-items:center;}
 #main{padding:12px 16px 120px;max-width:600px;margin:0 auto;}
-/* add box */
-#add-box{background:var(--white);border-radius:var(--r);border:1px solid var(--gray2);margin-bottom:12px;overflow:hidden;}
+#add-box{background:var(--w);border-radius:var(--r);border:1px solid var(--g2);margin-bottom:12px;overflow:hidden;}
 #add-row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
-#add-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--text);outline:none;}
-#add-input::placeholder{color:var(--gray3);}
-#mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--gray1);cursor:pointer;font-size:15px;flex-shrink:0;}
+#add-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--tx);outline:none;}
+#add-input::placeholder{color:var(--g3);}
+#mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--g1);cursor:pointer;font-size:15px;flex-shrink:0;}
 #mic-btn.rec{background:#fee;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-#do-add{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
+#do-add{padding:8px 18px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
 #aisle-row{padding:0 12px 10px;}
-#aisle-sel{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--gray1);outline:none;}
-#staples-toggle{padding:9px 12px;background:var(--gray1);border-top:1px solid var(--gray2);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
-#staples-panel{border-top:1px solid var(--gray2);padding:10px 12px;display:none;}
+#aisle-sel{width:100%;border:1px solid var(--g2);border-radius:var(--rs);padding:8px;font-size:13px;font-family:inherit;color:var(--tx);background:var(--g1);outline:none;}
+#staples-toggle{padding:9px 12px;background:var(--g1);border-top:1px solid var(--g2);font-size:12px;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+#staples-panel{border-top:1px solid var(--g2);padding:10px 12px;display:none;}
 #staples-panel.open{display:block;}
 #staple-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--gray2);font-size:12px;cursor:pointer;background:var(--white);color:var(--text2);}
-.s-cat.on{background:var(--green);color:#fff;border-color:var(--green);}
+.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--g2);font-size:12px;cursor:pointer;background:var(--w);color:var(--tx2);}
+.s-cat.on{background:var(--gn);color:#fff;border-color:var(--gn);}
 #staple-chips{display:flex;gap:6px;flex-wrap:wrap;}
-.s-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--gray2);font-size:13px;cursor:pointer;background:var(--white);}
-.s-chip:active{background:var(--green2);}
+.s-chip{padding:7px 14px;border-radius:20px;border:1.5px solid var(--g2);font-size:13px;cursor:pointer;background:var(--w);transition:all .2s;position:relative;overflow:hidden;}
+.s-chip.added{background:var(--gn2);border-color:var(--gn);color:var(--gn);transform:scale(1.05);}
+/* clear checked btn */
+#clear-btn-wrap{display:flex;justify-content:flex-end;margin-bottom:8px;}
+#clear-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--rd);background:transparent;color:var(--rd);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;}
 /* aisle section */
-.a-sec{margin-bottom:8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--gray2);background:var(--white);}
+.a-sec{margin-bottom:8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--g2);background:var(--w);}
 .a-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
 .a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .a-lbl{font-size:13px;font-weight:600;flex:1;}
-.a-cnt{font-size:12px;color:var(--gray3);}
-.a-chev{font-size:11px;color:var(--gray3);transition:transform .2s;}
+.a-cnt{font-size:12px;color:var(--g3);}
+.a-chev{font-size:11px;color:var(--g3);transition:transform .2s;}
 .a-sec.col .a-chev{transform:rotate(-90deg);}
 .a-sec.col .a-body{display:none;}
-.a-prog{height:3px;background:var(--gray2);}
+.a-prog{height:3px;background:var(--g2);}
 .a-prog-fill{height:100%;transition:width .3s;}
 /* item */
-.iw{position:relative;overflow:hidden;border-top:1px solid var(--gray2);}
-.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--red);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;user-select:none;}
-.si{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--white);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
+.iw{position:relative;overflow:hidden;border-top:1px solid var(--g2);}
+.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--rd);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;user-select:none;}
+.si{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--w);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
 .si.faded{opacity:.4;}
-.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--gray2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;}
-.chk.done{background:var(--green);border-color:var(--green);color:#fff;}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--g2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;}
+.chk.done{background:var(--gn);border-color:var(--gn);color:#fff;}
 .iname{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.iname.done{text-decoration:line-through;color:var(--gray3);}
+.iname.done{text-decoration:line-through;color:var(--g3);}
 .qty-c{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.qbtn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--gray2);background:var(--gray1);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;}
-.qbtn:active{background:var(--gray2);}
-.qnum{font-size:14px;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--gray2);}
-/* empty */
-.empty{text-align:center;padding:48px 24px;color:var(--gray3);}
+.qbtn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--g2);background:var(--g1);color:var(--tx);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;}
+.qbtn:active{background:var(--g2);}
+.qnum{font-size:14px;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--g2);}
+.empty{text-align:center;padding:48px 24px;color:var(--g3);}
 /* undo */
 #undo-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:var(--r);font-size:13px;display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 #undo-bar.show{opacity:1;pointer-events:all;}
@@ -78,79 +76,76 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 #settings{display:none;padding:12px 16px 80px;max-width:600px;margin:0 auto;}
 #settings.show{display:block;}
 #main-wrap.hide{display:none;}
-.set-card{background:var(--white);border-radius:var(--r);border:1px solid var(--gray2);margin-bottom:12px;overflow:hidden;}
-.set-grp{border-top:1px solid var(--gray2);padding:10px 14px;font-size:13px;font-weight:600;background:var(--gray1);display:flex;align-items:center;gap:8px;}
+.set-card{background:var(--w);border-radius:var(--r);border:1px solid var(--g2);margin-bottom:12px;overflow:hidden;}
+.set-grp{border-top:1px solid var(--g2);padding:10px 14px;font-size:13px;font-weight:600;background:var(--g1);display:flex;align-items:center;gap:8px;}
 .set-grp:first-child{border-top:none;}
-.set-row{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--gray2);}
+.set-row{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--g2);}
+.set-row.dragging{opacity:.4;background:var(--g1);}
+.set-row.drag-over{border-top:2px solid var(--gn);}
 .set-name{flex:1;font-size:14px;}
-.set-meta{font-size:12px;color:var(--gray3);}
-.set-add{padding:13px 14px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--gray2);cursor:pointer;color:var(--green);font-size:13px;font-weight:500;}
-.ebtn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--text2);}
-.dbtn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--red);font-weight:700;}
-.back{font-size:13px;color:var(--green);cursor:pointer;}
+.set-meta{font-size:12px;color:var(--g3);}
+.set-add{padding:13px 14px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--g2);cursor:pointer;color:var(--gn);font-size:13px;font-weight:500;}
+.ebtn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--tx2);}
+.dbtn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--rd);font-weight:700;}
+.drag-handle{cursor:grab;padding:4px 8px;color:var(--g3);font-size:18px;flex-shrink:0;}
+.drag-handle:active{cursor:grabbing;}
+.back{font-size:13px;color:var(--gn);cursor:pointer;}
 /* modal */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .ov.open{opacity:1;pointer-events:all;}
-.modal{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
+.modal{background:var(--w);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
 .ov.open .modal{transform:translateY(0);}
 .m-title{font-size:16px;font-weight:700;margin-bottom:16px;}
-.m-label{font-size:12px;color:var(--text2);margin-bottom:5px;}
+.m-label{font-size:12px;color:var(--tx2);margin-bottom:5px;}
 .m-field{margin-bottom:12px;}
-.m-inp{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--gray1);}
-.m-inp:focus{border-color:var(--green);}
+.m-inp{width:100%;border:1px solid var(--g2);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--g1);}
+.m-inp:focus{border-color:var(--gn);}
 .cp{display:flex;gap:8px;flex-wrap:wrap;}
 .csw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
 .csw.on{border-color:#333;}
 .m-acts{display:flex;gap:8px;margin-top:16px;}
-.mbtn{flex:1;padding:12px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--gray2);background:var(--gray1);color:var(--text);}
-.mbtn-p{background:var(--green);color:#fff;border-color:var(--green);}
-/* qty modal */
+.mbtn{flex:1;padding:12px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--g2);background:var(--g1);color:var(--tx);}
+.mbtn-p{background:var(--gn);color:#fff;border-color:var(--gn);}
 #qty-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
 #qty-ov.open{opacity:1;pointer-events:all;}
-#qty-box{background:var(--white);border-radius:var(--r);padding:24px 20px;width:200px;text-align:center;}
-#qty-item-name{font-size:13px;color:var(--text2);margin-bottom:12px;}
-#qty-inp{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:10px;font-size:24px;text-align:center;outline:none;font-family:inherit;}
-#qty-inp:focus{border-color:var(--green);}
-#qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
+#qty-box{background:var(--w);border-radius:var(--r);padding:24px 20px;width:200px;text-align:center;}
+#qty-item-name{font-size:13px;color:var(--tx2);margin-bottom:12px;}
+#qty-inp{width:100%;border:1px solid var(--g2);border-radius:var(--rs);padding:10px;font-size:24px;text-align:center;outline:none;font-family:inherit;}
+#qty-inp:focus{border-color:var(--gn);}
+#qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
 </style>
 </head>
 <body>
-
 <div id="hdr">
   <div id="hdr-left"><span id="hdr-title">🛒 買い物リスト</span></div>
   <button id="settings-btn">⚙️</button>
 </div>
-
 <div id="main-wrap">
   <div id="tabs"><div id="tab-add">＋</div></div>
   <div id="main"></div>
 </div>
-
 <div id="settings">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-top:4px;">
     <span class="back" id="back-btn">← 戻る</span>
     <span style="font-size:16px;font-weight:700;">設定</span>
   </div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">スーパー・売り場</div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">スーパー・売り場</div>
   <div class="set-card" id="store-settings"></div>
-  <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;">定番リスト</div>
+  <div style="font-size:12px;color:var(--tx2);margin:16px 0 6px;">定番リスト</div>
   <div class="set-card" id="staple-settings"></div>
 </div>
-
 <!-- Aisle modal -->
 <div class="ov" id="aisle-ov">
   <div class="modal">
     <div class="m-title" id="aisle-m-title">売り場を追加</div>
     <div class="m-field"><div class="m-label">売り場名</div><input class="m-inp" id="aisle-name-inp" placeholder="例：野菜・果物"></div>
     <div class="m-field"><div class="m-label">色</div><div class="cp" id="cp"></div></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-inp" id="aisle-sort-inp" type="number" value="1"></div>
     <div class="m-acts">
       <button class="mbtn" onclick="closeOv('aisle-ov')">キャンセル</button>
       <button class="mbtn mbtn-p" onclick="saveAisle()">保存</button>
     </div>
   </div>
 </div>
-
 <!-- Store modal -->
 <div class="ov" id="store-ov">
   <div class="modal">
@@ -162,21 +157,18 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     </div>
   </div>
 </div>
-
 <!-- Staple modal -->
 <div class="ov" id="staple-ov">
   <div class="modal">
     <div class="m-title" id="staple-m-title">定番アイテムを追加</div>
     <div class="m-field"><div class="m-label">アイテム名</div><input class="m-inp" id="staple-name-inp" placeholder="例：玉ねぎ"></div>
     <div class="m-field"><div class="m-label">売り場</div><select class="m-inp" id="staple-aisle-inp"></select></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-inp" id="staple-sort-inp" type="number" value="1"></div>
     <div class="m-acts">
       <button class="mbtn" onclick="closeOv('staple-ov')">キャンセル</button>
       <button class="mbtn mbtn-p" onclick="saveStaple()">保存</button>
     </div>
   </div>
 </div>
-
 <!-- Qty modal -->
 <div id="qty-ov">
   <div id="qty-box">
@@ -185,32 +177,22 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
     <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
-
-<!-- Undo bar -->
 <div id="undo-bar"><span id="undo-msg">削除しました</span><button id="undo-btn" onclick="doUndo()">元に戻す</button></div>
 
 <script>
-const SB = supabase.createClient(
+var SB = supabase.createClient(
   'https://pfobhvsslpxuiglfacss.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE'
 );
-const COLORS = ['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
-
-// --- State ---
+var COLORS = ['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
 var stores=[], aisles=[], staples=[], items=[];
-var activeStore=null;
-var editAisleId=null, aisleStoreId=null;
-var editStapleId=null;
-var qtyItemId=null;
-var staplesOpen=false, staplesCat=null;
-var isRec=false, recog=null;
-var undoItem=null, undoTimer=null;
-var skipRT=false;
+var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null;
+var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
+var undoStack=null, undoTimer=null, skipRT=false;
 
-// --- Boot ---
 async function boot() {
   await reload();
-  SB.channel('c1').on('postgres_changes',{event:'*',schema:'public'}, function(){
+  SB.channel('c1').on('postgres_changes',{event:'*',schema:'public'},function(){
     if(!skipRT){ reload().then(function(){ drawAll(); }); }
   }).subscribe();
   drawAll();
@@ -218,7 +200,7 @@ async function boot() {
 
 async function reload() {
   var r = await Promise.all([
-    SB.from('stores').select('*'),
+    SB.from('stores').select('*').order('sort_order'),
     SB.from('aisles').select('*').order('sort_order'),
     SB.from('staples').select('*').order('sort_order'),
     SB.from('shopping_items').select('*').order('created_at')
@@ -232,7 +214,6 @@ async function reload() {
 
 function pause(ms) { skipRT=true; setTimeout(function(){ skipRT=false; }, ms||2000); }
 
-// --- Draw ---
 function drawAll() { drawTabs(); drawMain(); if(document.getElementById('settings').classList.contains('show')) drawSettings(); }
 
 function drawTabs() {
@@ -252,15 +233,11 @@ function drawTabs() {
 
 function drawMain() {
   var el = document.getElementById('main');
-  if (!activeStore) {
-    el.innerHTML = '<div class="empty">⚙️設定からスーパーを追加してください</div>';
-    return;
-  }
+  if (!activeStore) { el.innerHTML = '<div class="empty">⚙️設定からスーパーを追加してください</div>'; return; }
   var sa = aisles.filter(function(a){ return a.store_id===activeStore; });
   var si = items.filter(function(i){ return i.store_id===activeStore; });
-  var ss = staples.filter(function(s){
-    for(var i=0;i<sa.length;i++){ if(sa[i].id===s.aisle_id) return true; } return false;
-  });
+  var ss = staples.filter(function(s){ for(var i=0;i<sa.length;i++){if(sa[i].id===s.aisle_id)return true;} return false; });
+  var hasChecked = si.some(function(i){ return i.checked; });
 
   var h = '';
   // Add box
@@ -271,33 +248,36 @@ function drawMain() {
   h += '<button id="do-add" onclick="doAdd()">追加</button>';
   h += '</div>';
   h += '<div id="aisle-row"><select id="aisle-sel"><option value="">売り場（未分類）</option>';
-  for(var i=0;i<sa.length;i++) h += '<option value="'+sa[i].id+'">'+sa[i].name+'</option>';
+  for (var i=0;i<sa.length;i++) h += '<option value="'+sa[i].id+'">'+sa[i].name+'</option>';
   h += '</select></div>';
   h += '<div id="staples-toggle" onclick="toggleStaples()"><span>📋 定番リストから追加</span><span>'+(staplesOpen?'▲':'▼')+'</span></div>';
   h += '<div id="staples-panel"'+(staplesOpen?' class="open"':'')+'>';
   h += '<div id="staple-cats">';
   h += '<div class="s-cat'+(staplesCat===null?' on':'')+'" onclick="setCat(null)">すべて</div>';
-  for(var i=0;i<sa.length;i++){
-    var a=sa[i];
-    var on=staplesCat===a.id;
+  for (var i=0;i<sa.length;i++) {
+    var a=sa[i], on=staplesCat===a.id;
     var style=on?'background:'+a.color+';border-color:'+a.color+';color:#fff':'color:'+a.color+';border-color:'+a.color+'40';
     h += '<div class="s-cat'+(on?' on':'')+'" style="'+style+'" onclick="setCat(\''+a.id+'\')">'+a.name+'</div>';
   }
   h += '</div><div id="staple-chips">';
-  var filtered = ss.filter(function(s){ return staplesCat===null || s.aisle_id===staplesCat; });
-  if(filtered.length===0) h += '<span style="color:var(--gray3);font-size:13px;">定番アイテムがありません</span>';
-  for(var i=0;i<filtered.length;i++) h += '<div class="s-chip" onclick="addFromStaple(\''+filtered[i].id+'\')">'+filtered[i].name+'</div>';
+  var filtered = ss.filter(function(s){ return staplesCat===null||s.aisle_id===staplesCat; });
+  if (!filtered.length) h += '<span style="color:var(--g3);font-size:13px;">定番アイテムがありません</span>';
+  for (var i=0;i<filtered.length;i++) h += '<div class="s-chip" id="chip-'+filtered[i].id+'" onclick="addFromStaple(\''+filtered[i].id+'\')">'+filtered[i].name+'</div>';
   h += '</div></div></div>';
 
-  // Items
-  if (si.length===0) {
+  // Clear checked button
+  if (hasChecked) {
+    h += '<div id="clear-btn-wrap"><button id="clear-btn" onclick="clearChecked()">✓ 購入済みをすべて削除</button></div>';
+  }
+
+  // Items by aisle
+  if (!si.length) {
     h += '<div class="empty">リストは空です ✅</div>';
   } else {
-    // By aisle
-    for(var ai=0;ai<sa.length;ai++){
+    for (var ai=0;ai<sa.length;ai++) {
       var aisle=sa[ai];
       var ait=si.filter(function(it){ return it.aisle_id===aisle.id; });
-      if(!ait.length) continue;
+      if (!ait.length) continue;
       var done=ait.filter(function(it){return it.checked;}).length;
       var pct=Math.round(done/ait.length*100);
       h += '<div class="a-sec" id="sec-'+aisle.id+'">';
@@ -308,24 +288,20 @@ function drawMain() {
       h += '<div class="a-chev">▾</div></div>';
       h += '<div class="a-prog"><div class="a-prog-fill" style="width:'+pct+'%;background:'+aisle.color+'60"></div></div>';
       h += '<div class="a-body">';
-      for(var ii=0;ii<ait.length;ii++) h += itemHTML(ait[ii]);
+      for (var ii=0;ii<ait.length;ii++) h += itemHTML(ait[ii]);
       h += '</div></div>';
     }
-    // Uncategorized
     var noA=si.filter(function(it){return !it.aisle_id;});
-    if(noA.length){
+    if (noA.length) {
       h += '<div class="a-sec" id="sec-none">';
       h += '<div class="a-hdr" style="background:#f0f0f0" onclick="togSec(\'none\')">';
-      h += '<div class="a-dot" style="background:#999"></div>';
-      h += '<div class="a-lbl">未分類</div>';
-      h += '<div class="a-cnt">'+noA.length+'</div>';
-      h += '<div class="a-chev">▾</div></div>';
+      h += '<div class="a-dot" style="background:#999"></div><div class="a-lbl">未分類</div>';
+      h += '<div class="a-cnt">'+noA.length+'</div><div class="a-chev">▾</div></div>';
       h += '<div class="a-body">';
-      for(var ii=0;ii<noA.length;ii++) h += itemHTML(noA[ii]);
+      for (var ii=0;ii<noA.length;ii++) h += itemHTML(noA[ii]);
       h += '</div></div>';
     }
   }
-
   el.innerHTML = h;
   attachSwipe();
 }
@@ -334,45 +310,42 @@ function itemHTML(it) {
   var dc = it.checked ? ' done' : '';
   var fc = it.checked ? ' faded' : '';
   var id = it.id;
-  var nm = it.name;
+  var nm = it.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var nmRaw = it.name.replace(/'/g,'&#39;');
   var qty = it.quantity;
-  var h = '<div class="iw" id="iw-' + id + '">';
-  if (!it.checked) {
-    h += '<div class="del-bg" onclick="delItem(\''+ id +'\')">削除</div>';
-  }
-  h += '<div class="si' + fc + '" id="si-' + id + '">' ;
-  h += '<div class="chk' + dc + '" onclick="togChk(\''+ id +'\')">' + (it.checked ? '✓' : '') + '</div>';
-  h += '<div class="iname' + dc + '">' + nm + '</div>';
+  var h = '<div class="iw" id="iw-'+id+'">';
+  if (!it.checked) h += '<div class="del-bg" onclick="delItem(\''+id+'\')">削除</div>';
+  h += '<div class="si'+fc+'" id="si-'+id+'">';
+  h += '<div class="chk'+dc+'" onclick="togChk(\''+id+'\')">'+( it.checked?'✓':'' )+'</div>';
+  h += '<div class="iname'+dc+'">'+nm+'</div>';
   if (!it.checked) {
     h += '<div class="qty-c">';
-    h += '<button class="qbtn" onclick="chgQty(\''+ id +'\',-1)">−</button>';
-    h += '<div class="qnum" onclick="openQty(\''+ id +'\',\''+ nm.replace(/'/g,'&#39;') +'\','+ qty +')">' + qty + '</div>';
-    h += '<button class="qbtn" onclick="chgQty(\''+ id +'\',1)">＋</button>';
+    h += '<button class="qbtn" onclick="chgQty(\''+id+'\',-1)">−</button>';
+    h += '<div class="qnum" onclick="openQty(\''+id+'\',\''+nmRaw+'\','+qty+')">'+qty+'</div>';
+    h += '<button class="qbtn" onclick="chgQty(\''+id+'\',1)">＋</button>';
     h += '</div>';
   }
   h += '</div></div>';
   return h;
 }
 
-// Swipe to delete
 function attachSwipe() {
   var els = document.querySelectorAll('.si:not(.faded)');
   for (var i=0;i<els.length;i++) {
     (function(el){
-      var sx=0, sy=0, dx=0, swiped=false;
-      el.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; swiped=el.classList.contains('sw'); }, {passive:true});
-      el.addEventListener('touchmove', function(e){
+      var sx=0,sy=0,dx=0,sw=false;
+      el.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; sw=el.classList.contains('sw'); },{passive:true});
+      el.addEventListener('touchmove',function(e){
         dx=e.touches[0].clientX-sx;
-        var dy=Math.abs(e.touches[0].clientY-sy);
-        if(dy>Math.abs(dx)) return;
-        var mv=swiped?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
+        if(Math.abs(e.touches[0].clientY-sy)>Math.abs(dx)) return;
+        var mv=sw?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
         el.style.transition='none'; el.style.transform='translateX('+mv+'px)';
       },{passive:true});
-      el.addEventListener('touchend', function(){
+      el.addEventListener('touchend',function(){
         el.style.transition='transform .2s';
-        if(!swiped&&dx<-44){ el.style.transform='translateX(-88px)'; el.classList.add('sw'); swiped=true; }
-        else if(swiped&&dx>44){ el.style.transform='translateX(0)'; el.classList.remove('sw'); swiped=false; }
-        else { el.style.transform=swiped?'translateX(-88px)':'translateX(0)'; }
+        if(!sw&&dx<-44){ el.style.transform='translateX(-88px)'; el.classList.add('sw'); sw=true; }
+        else if(sw&&dx>44){ el.style.transform='translateX(0)'; el.classList.remove('sw'); sw=false; }
+        else { el.style.transform=sw?'translateX(-88px)':'translateX(0)'; }
       });
     })(els[i]);
   }
@@ -389,37 +362,43 @@ async function doAdd() {
   var name = inp.value.trim();
   if (!name || !activeStore) return;
   var aid = document.getElementById('aisle-sel').value || null;
-
   pause(2000);
   var r = await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:aid,name:name,quantity:1,checked:false}).select().single();
   if (r.data) items.push(r.data);
-
+  // Auto-register staple
   if (aid) {
     var already=false;
-    for(var i=0;i<staples.length;i++){ if(staples[i].name===name && staples[i].aisle_id===aid){ already=true; break; } }
+    for(var i=0;i<staples.length;i++){if(staples[i].name===name&&staples[i].aisle_id===aid){already=true;break;}}
     if (!already) {
       var mx=0;
-      for(var i=0;i<staples.length;i++){ if(staples[i].aisle_id===aid && (staples[i].sort_order||0)>mx) mx=staples[i].sort_order||0; }
-      var sr = await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:mx+1}).select().single();
-      if (sr.data) staples.push(sr.data);
+      for(var i=0;i<staples.length;i++){if(staples[i].aisle_id===aid&&(staples[i].sort_order||0)>mx)mx=staples[i].sort_order||0;}
+      var sr=await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:mx+1}).select().single();
+      if(sr.data) staples.push(sr.data);
     }
   }
-  inp.value = '';
-  drawAll();
+  inp.value=''; drawAll();
 }
 
 async function addFromStaple(sid) {
   var s=null;
-  for(var i=0;i<staples.length;i++){ if(staples[i].id===sid){ s=staples[i]; break; } }
+  for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
+
+  // Feedback: vibrate + highlight chip
+  if(navigator.vibrate) navigator.vibrate(40);
+  var chip = document.getElementById('chip-'+sid);
+  if(chip){ chip.classList.add('added'); setTimeout(function(){ chip.classList.remove('added'); },600); }
+
   pause(2000);
   var ex=null;
-  for(var i=0;i<items.length;i++){ if(items[i].store_id===activeStore&&items[i].name===s.name&&!items[i].checked){ ex=items[i]; break; } }
+  for(var i=0;i<items.length;i++){if(items[i].store_id===activeStore&&items[i].name===s.name&&!items[i].checked){ex=items[i];break;}}
   if(ex){
     await SB.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
     ex.quantity++;
   } else {
-    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:1,checked:false}).select().single();
+    // Restore last quantity from staple
+    var lastQty = s.last_qty || 1;
+    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:lastQty,checked:false}).select().single();
     if(r.data) items.push(r.data);
   }
   drawAll();
@@ -427,9 +406,19 @@ async function addFromStaple(sid) {
 
 async function togChk(id) {
   var it=null;
-  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
   pause(2000);
+  // If checking off, save quantity to staple as last_qty
+  if(!it.checked && it.aisle_id) {
+    for(var i=0;i<staples.length;i++){
+      if(staples[i].name===it.name&&staples[i].aisle_id===it.aisle_id){
+        await SB.from('staples').update({last_qty:it.quantity}).eq('id',staples[i].id);
+        staples[i].last_qty=it.quantity;
+        break;
+      }
+    }
+  }
   await SB.from('shopping_items').update({checked:!it.checked}).eq('id',id);
   it.checked=!it.checked;
   drawAll();
@@ -437,7 +426,7 @@ async function togChk(id) {
 
 async function chgQty(id, d) {
   var it=null;
-  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
   var nq=Math.max(1,it.quantity+d);
   pause(2000);
@@ -448,42 +437,60 @@ async function chgQty(id, d) {
 
 async function delItem(id) {
   var it=null;
-  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
-  undoItem={id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};
+  undoStack=[{id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked}];
   pause(2000);
   await SB.from('shopping_items').delete().eq('id',id);
-  items=items.filter(function(i){ return i.id!==id; });
+  items=items.filter(function(i){return i.id!==id;});
   drawAll();
+  showUndo('「'+it.name+'」を削除');
+}
+
+async function clearChecked() {
+  var si=items.filter(function(i){return i.store_id===activeStore&&i.checked;});
+  if(!si.length) return;
+  undoStack=si.map(function(it){return {id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};});
+  pause(2000);
+  var ids=si.map(function(i){return i.id;});
+  await SB.from('shopping_items').delete().in('id',ids);
+  items=items.filter(function(i){return ids.indexOf(i.id)===-1;});
+  drawAll();
+  showUndo(si.length+'件の購入済みを削除');
+}
+
+function showUndo(msg) {
   if(undoTimer) clearTimeout(undoTimer);
-  document.getElementById('undo-msg').textContent='「'+it.name+'」を削除';
+  document.getElementById('undo-msg').textContent=msg;
   document.getElementById('undo-bar').classList.add('show');
-  undoTimer=setTimeout(function(){ document.getElementById('undo-bar').classList.remove('show'); undoItem=null; },4000);
+  undoTimer=setTimeout(function(){ document.getElementById('undo-bar').classList.remove('show'); undoStack=null; },5000);
 }
 
 async function doUndo() {
-  if(!undoItem) return;
+  if(!undoStack||!undoStack.length) return;
   pause(2000);
-  var r=await SB.from('shopping_items').insert({store_id:undoItem.store_id,aisle_id:undoItem.aisle_id,name:undoItem.name,quantity:undoItem.quantity,checked:undoItem.checked}).select().single();
-  if(r.data) items.push(r.data);
+  for(var i=0;i<undoStack.length;i++){
+    var u=undoStack[i];
+    var r=await SB.from('shopping_items').insert({store_id:u.store_id,aisle_id:u.aisle_id,name:u.name,quantity:u.quantity,checked:u.checked}).select().single();
+    if(r.data) items.push(r.data);
+  }
   document.getElementById('undo-bar').classList.remove('show');
-  undoItem=null; if(undoTimer) clearTimeout(undoTimer);
+  undoStack=null; if(undoTimer) clearTimeout(undoTimer);
   drawAll();
 }
 
-// Qty modal
-function openQty(id, name, qty) {
+function openQty(id,name,qty){
   qtyItemId=id;
   document.getElementById('qty-item-name').textContent=name;
   document.getElementById('qty-inp').value=qty;
   document.getElementById('qty-ov').classList.add('open');
-  setTimeout(function(){ document.getElementById('qty-inp').select(); },100);
+  setTimeout(function(){document.getElementById('qty-inp').select();},100);
 }
-async function saveQty() {
+async function saveQty(){
   var q=parseInt(document.getElementById('qty-inp').value)||1;
   if(qtyItemId){
     var it=null;
-    for(var i=0;i<items.length;i++){ if(items[i].id===qtyItemId){ it=items[i]; break; } }
+    for(var i=0;i<items.length;i++){if(items[i].id===qtyItemId){it=items[i];break;}}
     if(it){
       pause(2000);
       await SB.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
@@ -491,92 +498,84 @@ async function saveQty() {
       drawAll();
     }
   }
-  document.getElementById('qty-ov').classList.remove('open');
-  qtyItemId=null;
+  document.getElementById('qty-ov').classList.remove('open'); qtyItemId=null;
 }
-document.getElementById('qty-ov').addEventListener('click',function(e){ if(e.target===document.getElementById('qty-ov')) document.getElementById('qty-ov').classList.remove('open'); });
-document.getElementById('qty-inp').addEventListener('keydown',function(e){ if(e.key==='Enter') saveQty(); });
+document.getElementById('qty-ov').addEventListener('click',function(e){if(e.target===document.getElementById('qty-ov'))document.getElementById('qty-ov').classList.remove('open');});
+document.getElementById('qty-inp').addEventListener('keydown',function(e){if(e.key==='Enter')saveQty();});
 
-// Voice
-function toggleMic() {
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){ alert('このブラウザは音声入力非対応です'); return; }
-  if(isRec){ recog.stop(); return; }
+function toggleMic(){
+  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){alert('このブラウザは音声入力非対応です');return;}
+  if(isRec){recog.stop();return;}
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   recog=new SR(); recog.lang='ja-JP';
-  recog.onresult=function(e){ var inp=document.getElementById('add-input'); if(inp) inp.value=e.results[0][0].transcript; };
-  recog.onend=function(){ isRec=false; var b=document.getElementById('mic-btn'); if(b) b.className=''; };
-  recog.start(); isRec=true; var b=document.getElementById('mic-btn'); if(b) b.className='rec';
+  recog.onresult=function(e){var inp=document.getElementById('add-input');if(inp)inp.value=e.results[0][0].transcript;};
+  recog.onend=function(){isRec=false;var b=document.getElementById('mic-btn');if(b)b.className='';};
+  recog.start(); isRec=true; var b=document.getElementById('mic-btn');if(b)b.className='rec';
 }
 
-// Overlays
-function openOv(id){ document.getElementById(id).classList.add('open'); }
-function closeOv(id){ document.getElementById(id).classList.remove('open'); editAisleId=null; editStapleId=null; }
-document.querySelectorAll('.ov').forEach(function(el){ el.addEventListener('click',function(e){ if(e.target===el) el.classList.remove('open'); }); });
+function openOv(id){document.getElementById(id).classList.add('open');}
+function closeOv(id){document.getElementById(id).classList.remove('open');editAisleId=null;editStapleId=null;}
+document.querySelectorAll('.ov').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('open');});});
 
-// Color picker
-function drawCP(sel) {
+function drawCP(sel){
   var h='';
-  for(var i=0;i<COLORS.length;i++){
-    h+='<div class="csw'+(COLORS[i]===sel?' on':'')+'" style="background:'+COLORS[i]+'" onclick="pickColor(\''+COLORS[i]+'\')"></div>';
-  }
+  for(var i=0;i<COLORS.length;i++) h+='<div class="csw'+(COLORS[i]===sel?' on':'')+'" style="background:'+COLORS[i]+'" onclick="pickColor(\''+COLORS[i]+'\')"></div>';
   document.getElementById('cp').innerHTML=h;
 }
-function pickColor(c){ drawCP(c); }
-function getColor(){ var el=document.querySelector('.csw.on'); return el?el.style.backgroundColor:COLORS[0]; }
+function pickColor(c){drawCP(c);}
+function getColor(){var el=document.querySelector('.csw.on');return el?el.style.backgroundColor:COLORS[0];}
 
 // Aisle
-function openAddAisle(sid) {
+function openAddAisle(sid){
   aisleStoreId=sid; editAisleId=null;
   document.getElementById('aisle-m-title').textContent='売り場を追加';
   document.getElementById('aisle-name-inp').value='';
-  document.getElementById('aisle-sort-inp').value=aisles.filter(function(a){return a.store_id===sid;}).length+1;
   drawCP(COLORS[0]); openOv('aisle-ov');
 }
-function openEditAisle(id) {
-  var a=null; for(var i=0;i<aisles.length;i++){if(aisles[i].id===id){a=aisles[i];break;}}
-  if(!a) return;
+function openEditAisle(id){
+  var a=null; for(var i=0;i<aisles.length;i++){if(aisles[i].id===id){a=aisles[i];break;}} if(!a)return;
   editAisleId=id; aisleStoreId=a.store_id;
   document.getElementById('aisle-m-title').textContent='売り場を編集';
   document.getElementById('aisle-name-inp').value=a.name;
-  document.getElementById('aisle-sort-inp').value=a.sort_order;
   drawCP(a.color); openOv('aisle-ov');
 }
-async function saveAisle() {
+async function saveAisle(){
   var name=document.getElementById('aisle-name-inp').value.trim();
-  var sort=parseInt(document.getElementById('aisle-sort-inp').value)||1;
   var color=getColor();
   if(!name) return;
   pause(2000);
   if(editAisleId){
-    await SB.from('aisles').update({name:name,color:color,sort_order:sort}).eq('id',editAisleId);
-    for(var i=0;i<aisles.length;i++){ if(aisles[i].id===editAisleId){aisles[i].name=name;aisles[i].color=color;aisles[i].sort_order=sort;break;} }
+    await SB.from('aisles').update({name:name,color:color}).eq('id',editAisleId);
+    for(var i=0;i<aisles.length;i++){if(aisles[i].id===editAisleId){aisles[i].name=name;aisles[i].color=color;break;}}
   } else {
-    var r=await SB.from('aisles').insert({store_id:aisleStoreId,name:name,color:color,sort_order:sort}).select().single();
-    if(r.data){ aisles.push(r.data); aisles.sort(function(a,b){return a.sort_order-b.sort_order;}); }
+    var mx=0; for(var i=0;i<aisles.length;i++){if(aisles[i].store_id===aisleStoreId&&(aisles[i].sort_order||0)>mx)mx=aisles[i].sort_order||0;}
+    var r=await SB.from('aisles').insert({store_id:aisleStoreId,name:name,color:color,sort_order:mx+1}).select().single();
+    if(r.data){aisles.push(r.data);aisles.sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);});}
   }
   closeOv('aisle-ov'); drawAll();
 }
-async function deleteAisle(id) {
+async function deleteAisle(id){
   if(!confirm('この売り場を削除しますか？')) return;
   pause(2000);
   await SB.from('staples').delete().eq('aisle_id',id);
   await SB.from('shopping_items').update({aisle_id:null}).eq('aisle_id',id);
   await SB.from('aisles').delete().eq('id',id);
   staples=staples.filter(function(s){return s.aisle_id!==id;});
-  for(var i=0;i<items.length;i++){if(items[i].aisle_id===id) items[i].aisle_id=null;}
+  for(var i=0;i<items.length;i++){if(items[i].aisle_id===id)items[i].aisle_id=null;}
   aisles=aisles.filter(function(a){return a.id!==id;});
   drawAll();
 }
 
 // Store
-async function saveStore() {
-  var name=document.getElementById('store-name-inp').value.trim(); if(!name) return;
+async function saveStore(){
+  var name=document.getElementById('store-name-inp').value.trim(); if(!name)return;
   pause(2000);
-  var r=await SB.from('stores').insert({name:name}).select().single();
-  if(r.data){stores.push(r.data); activeStore=r.data.id;}
+  var mx=0; for(var i=0;i<stores.length;i++){if((stores[i].sort_order||0)>mx)mx=stores[i].sort_order||0;}
+  var r=await SB.from('stores').insert({name:name,sort_order:mx+1}).select().single();
+  if(r.data){stores.push(r.data);activeStore=r.data.id;}
   closeOv('store-ov'); document.getElementById('store-name-inp').value=''; drawAll();
 }
-async function deleteStore(id) {
+async function deleteStore(id){
   if(!confirm('このスーパーを削除しますか？')) return;
   pause(2000);
   await SB.from('shopping_items').delete().eq('store_id',id);
@@ -593,42 +592,39 @@ async function deleteStore(id) {
 }
 
 // Staples
-function openAddStaple() {
+function openAddStaple(){
   editStapleId=null;
   document.getElementById('staple-m-title').textContent='定番アイテムを追加';
   document.getElementById('staple-name-inp').value='';
   var sel=document.getElementById('staple-aisle-inp');
   sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'">'+aisles[i].name+'</option>';
-  document.getElementById('staple-sort-inp').value=1;
   openOv('staple-ov');
 }
-function openEditStaple(id) {
-  var s=null; for(var i=0;i<staples.length;i++){if(staples[i].id===id){s=staples[i];break;}}
-  if(!s) return;
+function openEditStaple(id){
+  var s=null; for(var i=0;i<staples.length;i++){if(staples[i].id===id){s=staples[i];break;}} if(!s)return;
   editStapleId=id;
   document.getElementById('staple-m-title').textContent='定番アイテムを編集';
   document.getElementById('staple-name-inp').value=s.name;
   var sel=document.getElementById('staple-aisle-inp');
   sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'"'+(aisles[i].id===s.aisle_id?' selected':'')+'>'+aisles[i].name+'</option>';
-  document.getElementById('staple-sort-inp').value=s.sort_order||1;
   openOv('staple-ov');
 }
-async function saveStaple() {
+async function saveStaple(){
   var name=document.getElementById('staple-name-inp').value.trim();
   var aid=document.getElementById('staple-aisle-inp').value;
-  var sort=parseInt(document.getElementById('staple-sort-inp').value)||1;
   if(!name||!aid) return;
   pause(2000);
   if(editStapleId){
-    await SB.from('staples').update({name:name,aisle_id:aid,sort_order:sort}).eq('id',editStapleId);
-    for(var i=0;i<staples.length;i++){if(staples[i].id===editStapleId){staples[i].name=name;staples[i].aisle_id=aid;staples[i].sort_order=sort;break;}}
+    await SB.from('staples').update({name:name,aisle_id:aid}).eq('id',editStapleId);
+    for(var i=0;i<staples.length;i++){if(staples[i].id===editStapleId){staples[i].name=name;staples[i].aisle_id=aid;break;}}
   } else {
-    var r=await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:sort}).select().single();
+    var mx=0; for(var i=0;i<staples.length;i++){if(staples[i].aisle_id===aid&&(staples[i].sort_order||0)>mx)mx=staples[i].sort_order||0;}
+    var r=await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:mx+1}).select().single();
     if(r.data) staples.push(r.data);
   }
   closeOv('staple-ov'); drawAll();
 }
-async function deleteStaple(id) {
+async function deleteStaple(id){
   if(!confirm('この定番アイテムを削除しますか？')) return;
   pause(2000);
   await SB.from('staples').delete().eq('id',id);
@@ -636,21 +632,148 @@ async function deleteStaple(id) {
   drawAll();
 }
 
+// ===== DRAG & DROP for settings =====
+var dragSrcId=null, dragSrcType=null;
+
+function onDragStart(e, id, type) {
+  dragSrcId=id; dragSrcType=type;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(function(){ var el=document.getElementById('dr-'+type+'-'+id); if(el) el.classList.add('dragging'); },0);
+}
+function onDragOver(e, id, type) {
+  e.preventDefault(); e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over'); });
+  var el=document.getElementById('dr-'+type+'-'+id);
+  if(el&&id!==dragSrcId) el.classList.add('drag-over');
+}
+function onDragLeave(id, type) {
+  var el=document.getElementById('dr-'+type+'-'+id);
+  if(el) el.classList.remove('drag-over');
+}
+async function onDrop(e, id, type) {
+  e.preventDefault();
+  if(!dragSrcId||dragSrcId===id||dragSrcType!==type) return;
+  document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over','dragging'); });
+
+  if(type==='store'){
+    var arr=stores.slice();
+    var fromIdx=-1,toIdx=-1;
+    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
+    if(fromIdx<0||toIdx<0) return;
+    var moved=arr.splice(fromIdx,1)[0];
+    arr.splice(toIdx,0,moved);
+    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
+    stores=arr;
+    pause(3000);
+    for(var i=0;i<arr.length;i++) await SB.from('stores').update({sort_order:i+1}).eq('id',arr[i].id);
+  } else if(type==='aisle'){
+    var arr=aisles.slice();
+    var fromIdx=-1,toIdx=-1;
+    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
+    if(fromIdx<0||toIdx<0) return;
+    var moved=arr.splice(fromIdx,1)[0];
+    arr.splice(toIdx,0,moved);
+    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
+    aisles=arr;
+    pause(3000);
+    for(var i=0;i<arr.length;i++) await SB.from('aisles').update({sort_order:i+1}).eq('id',arr[i].id);
+  } else if(type==='staple'){
+    var arr=staples.slice();
+    var fromIdx=-1,toIdx=-1;
+    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
+    if(fromIdx<0||toIdx<0) return;
+    var moved=arr.splice(fromIdx,1)[0];
+    arr.splice(toIdx,0,moved);
+    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
+    staples=arr;
+    pause(3000);
+    for(var i=0;i<arr.length;i++) await SB.from('staples').update({sort_order:i+1}).eq('id',arr[i].id);
+  }
+  dragSrcId=null;
+  drawSettings();
+}
+function onDragEnd(id,type){
+  document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('dragging','drag-over');});
+}
+
+// Touch drag for mobile
+var touchDragId=null, touchDragType=null, touchDragEl=null, touchDragClone=null;
+function onTouchDragStart(e, id, type) {
+  touchDragId=id; touchDragType=type;
+  touchDragEl=document.getElementById('dr-'+type+'-'+id);
+  touchDragEl.classList.add('dragging');
+  touchDragClone=touchDragEl.cloneNode(true);
+  touchDragClone.style.position='fixed';
+  touchDragClone.style.opacity='0.8';
+  touchDragClone.style.pointerEvents='none';
+  touchDragClone.style.width=touchDragEl.offsetWidth+'px';
+  touchDragClone.style.zIndex='999';
+  touchDragClone.style.background='var(--w)';
+  touchDragClone.style.boxShadow='0 4px 20px rgba(0,0,0,.2)';
+  document.body.appendChild(touchDragClone);
+  moveTouchClone(e.touches[0]);
+}
+function moveTouchClone(t){ if(touchDragClone){touchDragClone.style.top=(t.clientY-30)+'px';touchDragClone.style.left='16px';} }
+function onTouchDragMove(e,id,type){
+  e.preventDefault();
+  moveTouchClone(e.touches[0]);
+  // find element under finger
+  var t=e.touches[0];
+  var els=document.querySelectorAll('.set-row');
+  document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('drag-over');});
+  for(var i=0;i<els.length;i++){
+    var rect=els[i].getBoundingClientRect();
+    if(t.clientY>=rect.top&&t.clientY<=rect.bottom){
+      var eid=els[i].id.replace('dr-'+type+'-','');
+      if(eid&&eid!==touchDragId) els[i].classList.add('drag-over');
+      break;
+    }
+  }
+}
+function onTouchDragEnd(e,id,type){
+  if(touchDragClone){touchDragClone.remove();touchDragClone=null;}
+  if(touchDragEl){touchDragEl.classList.remove('dragging');touchDragEl=null;}
+  var overEl=document.querySelector('.set-row.drag-over');
+  if(overEl){
+    var targetId=overEl.id.replace('dr-'+type+'-','');
+    document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('drag-over');});
+    onDrop({preventDefault:function(){}},targetId,type);
+  }
+  touchDragId=null; touchDragType=null;
+}
+
 // Settings
 function drawSettings() {
   var se=document.getElementById('store-settings');
   var ste=document.getElementById('staple-settings');
   var h='';
+  // Stores with drag
   for(var i=0;i<stores.length;i++){
     var s=stores[i];
     var sa=aisles.filter(function(a){return a.store_id===s.id;});
-    h+='<div class="set-grp"><span style="flex:1">'+s.name+'</span><button class="dbtn" onclick="deleteStore(\''+s.id+'\')">削除</button></div>';
+    // Store row
+    h+='<div class="set-row" id="dr-store-'+s.id+'" draggable="true"';
+    h+=' ondragstart="onDragStart(event,\''+s.id+'\',\'store\')"';
+    h+=' ondragover="onDragOver(event,\''+s.id+'\',\'store\')"';
+    h+=' ondragleave="onDragLeave(\''+s.id+'\',\'store\')"';
+    h+=' ondrop="onDrop(event,\''+s.id+'\',\'store\')"';
+    h+=' ondragend="onDragEnd(\''+s.id+'\',\'store\')">';
+    h+='<div class="drag-handle" ontouchstart="onTouchDragStart(event,\''+s.id+'\',\'store\')" ontouchmove="onTouchDragMove(event,\''+s.id+'\',\'store\')" ontouchend="onTouchDragEnd(event,\''+s.id+'\',\'store\')">⠿</div>';
+    h+='<div class="set-name" style="font-weight:600">'+s.name+'</div>';
+    h+='<button class="dbtn" onclick="deleteStore(\''+s.id+'\')">削除</button>';
+    h+='</div>';
+    // Aisles under store
     for(var j=0;j<sa.length;j++){
       var a=sa[j];
-      h+='<div class="set-row">';
+      h+='<div class="set-row" id="dr-aisle-'+a.id+'" draggable="true" style="padding-left:36px"';
+      h+=' ondragstart="onDragStart(event,\''+a.id+'\',\'aisle\')"';
+      h+=' ondragover="onDragOver(event,\''+a.id+'\',\'aisle\')"';
+      h+=' ondragleave="onDragLeave(\''+a.id+'\',\'aisle\')"';
+      h+=' ondrop="onDrop(event,\''+a.id+'\',\'aisle\')"';
+      h+=' ondragend="onDragEnd(\''+a.id+'\',\'aisle\')">';
+      h+='<div class="drag-handle" ontouchstart="onTouchDragStart(event,\''+a.id+'\',\'aisle\')" ontouchmove="onTouchDragMove(event,\''+a.id+'\',\'aisle\')" ontouchend="onTouchDragEnd(event,\''+a.id+'\',\'aisle\')">⠿</div>';
       h+='<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
       h+='<div class="set-name">'+a.name+'</div>';
-      h+='<div class="set-meta">順'+a.sort_order+'</div>';
       h+='<button class="ebtn" onclick="openEditAisle(\''+a.id+'\')">✏️</button>';
       h+='<button class="dbtn" onclick="deleteAisle(\''+a.id+'\')">✕</button>';
       h+='</div>';
@@ -660,19 +783,28 @@ function drawSettings() {
   h+='<div class="set-add" onclick="openOv(\'store-ov\')">＋ スーパーを追加</div>';
   se.innerHTML=h;
 
+  // Staples with drag
   h='';
   for(var i=0;i<aisles.length;i++){
     var a=aisles[i];
-    var as=staples.filter(function(s){return s.aisle_id===a.id;}).sort(function(x,y){return (x.sort_order||0)-(y.sort_order||0);});
+    var as=staples.filter(function(s){return s.aisle_id===a.id;}).sort(function(x,y){return(x.sort_order||0)-(y.sort_order||0);});
     if(!as.length) continue;
     h+='<div class="set-grp" style="color:'+a.color+'">';
     h+='<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
     h+='</div>';
     for(var j=0;j<as.length;j++){
       var s=as[j];
-      h+='<div class="set-row"><div class="set-name">'+s.name+'</div><div class="set-meta">順'+(s.sort_order||'-')+'</div>';
+      h+='<div class="set-row" id="dr-staple-'+s.id+'" draggable="true"';
+      h+=' ondragstart="onDragStart(event,\''+s.id+'\',\'staple\')"';
+      h+=' ondragover="onDragOver(event,\''+s.id+'\',\'staple\')"';
+      h+=' ondragleave="onDragLeave(\''+s.id+'\',\'staple\')"';
+      h+=' ondrop="onDrop(event,\''+s.id+'\',\'staple\')"';
+      h+=' ondragend="onDragEnd(\''+s.id+'\',\'staple\')">';
+      h+='<div class="drag-handle" ontouchstart="onTouchDragStart(event,\''+s.id+'\',\'staple\')" ontouchmove="onTouchDragMove(event,\''+s.id+'\',\'staple\')" ontouchend="onTouchDragEnd(event,\''+s.id+'\',\'staple\')">⠿</div>';
+      h+='<div class="set-name">'+s.name+'</div>';
       h+='<button class="ebtn" onclick="openEditStaple(\''+s.id+'\')">✏️</button>';
-      h+='<button class="dbtn" onclick="deleteStaple(\''+s.id+'\')">✕</button></div>';
+      h+='<button class="dbtn" onclick="deleteStaple(\''+s.id+'\')">✕</button>';
+      h+='</div>';
     }
   }
   h+='<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
