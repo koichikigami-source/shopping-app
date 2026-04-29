@@ -3,1226 +3,692 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>買い物アプリ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>買い物リスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --bg:#f5f4f0; --surface:#fff; --surface2:#f0efe9; --border:#e0ddd4;
-  --text:#1a1916; --text2:#6b6860; --text3:#9b9890;
-  --accent:#2d5a27; --accent-light:#e8f0e7;
-  --danger:#c0392b; --radius:12px; --radius-sm:8px;
-}
+:root{--bg:#f5f4f0;--white:#fff;--gray1:#f0efe9;--gray2:#e0ddd4;--gray3:#9b9890;--text:#1a1916;--text2:#6b6860;--green:#2d5a27;--green2:#e8f0e7;--red:#c0392b;--r:12px;--rs:8px;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.header-title{font-size:17px;font-weight:700;}
-.icon-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
-.store-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;}
-.store-tabs::-webkit-scrollbar{display:none;}
-.store-tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
-.store-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-badge{background:var(--surface2);color:var(--text2);font-size:11px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;}
-.store-tab.active .tab-badge{background:var(--accent-light);color:var(--accent);}
-.store-tab-add{padding:10px 8px;color:var(--text3);cursor:pointer;font-size:20px;flex-shrink:0;display:flex;align-items:center;}
-.main{padding:12px 16px 120px;max-width:600px;margin:0 auto;}
-.quick-add{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
-.quick-row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
-.q-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--text);outline:none;}
-.q-input::placeholder{color:var(--text3);}
-.mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.mic-btn.rec{background:#fee;color:var(--danger);animation:pulse 1s infinite;}
+/* header */
+#hdr{background:var(--white);border-bottom:1px solid var(--gray2);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:100;}
+#hdr-title{font-size:17px;font-weight:700;}
+#settings-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--gray1);cursor:pointer;font-size:16px;}
+/* tabs */
+#tabs{background:var(--white);border-bottom:1px solid var(--gray2);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;padding:0 12px;}
+#tabs::-webkit-scrollbar{display:none;}
+.tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
+.tab.on{color:var(--green);border-bottom-color:var(--green);}
+.tab-n{background:var(--gray1);color:var(--text2);font-size:11px;padding:1px 6px;border-radius:10px;}
+.tab.on .tab-n{background:var(--green2);color:var(--green);}
+#tab-add{padding:10px 8px;font-size:20px;color:var(--gray3);cursor:pointer;display:flex;align-items:center;}
+/* main */
+#main{padding:12px 16px 120px;max-width:600px;margin:0 auto;}
+/* add box */
+#add-box{background:var(--white);border-radius:var(--r);border:1px solid var(--gray2);margin-bottom:12px;overflow:hidden;}
+#add-row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
+#add-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--text);outline:none;}
+#add-input::placeholder{color:var(--gray3);}
+#mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--gray1);cursor:pointer;font-size:15px;flex-shrink:0;}
+#mic-btn.rec{background:#fee;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.add-btn{padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
-.quick-meta{display:flex;gap:8px;padding:0 12px 10px;}
-.q-select{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;}
-.staples-toggle{padding:9px 12px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
-.staples-body{border-top:1px solid var(--border);padding:10px 12px;display:none;}
-.staples-body.open{display:block;}
-.s-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);}
-.s-cat.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.s-chips{display:flex;gap:6px;flex-wrap:wrap;}
-.s-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);}
-.s-chip:active{background:var(--accent-light);border-color:var(--accent);}
-.aisle-sec{margin-bottom:8px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface);}
-.aisle-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+#do-add{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
+#aisle-row{padding:0 12px 10px;}
+#aisle-sel{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--gray1);outline:none;}
+#staples-toggle{padding:9px 12px;background:var(--gray1);border-top:1px solid var(--gray2);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+#staples-panel{border-top:1px solid var(--gray2);padding:10px 12px;display:none;}
+#staples-panel.open{display:block;}
+#staple-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--gray2);font-size:12px;cursor:pointer;background:var(--white);color:var(--text2);}
+.s-cat.on{background:var(--green);color:#fff;border-color:var(--green);}
+#staple-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.s-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--gray2);font-size:13px;cursor:pointer;background:var(--white);}
+.s-chip:active{background:var(--green2);}
+/* aisle section */
+.a-sec{margin-bottom:8px;border-radius:var(--r);overflow:hidden;border:1px solid var(--gray2);background:var(--white);}
+.a-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
 .a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.a-name{font-size:13px;font-weight:600;flex:1;}
-.a-cnt{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
-.a-chev{font-size:11px;color:var(--text3);transition:transform .2s;}
-.aisle-sec.collapsed .a-chev{transform:rotate(-90deg);}
-.aisle-sec.collapsed .aisle-body{display:none;}
-.prog-bar{height:3px;background:var(--border);}
-.prog-fill{height:100%;transition:width .4s;}
-.item-wrap{position:relative;overflow:hidden;border-top:1px solid var(--border);}
-.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--danger);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;}
-.s-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
-.s-item.swiped{transform:translateX(-88px);}
-.s-item.faded{opacity:.45;}
-.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.chk.done{background:var(--accent);border-color:var(--accent);color:#fff;font-size:13px;}
-.iname-wrap{flex:1;min-width:0;}
-.iname{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.iname.done{text-decoration:line-through;color:var(--text3);}
-.qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.q-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.q-btn:active{background:var(--border);}
-.q-num{font-size:14px;font-family:'DM Mono',monospace;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--border);}
-.empty{text-align:center;padding:48px 24px;color:var(--text3);}
-.empty-icon{font-size:40px;margin-bottom:12px;}
-.undo-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
-.undo-bar.show{opacity:1;pointer-events:all;}
-.undo-btn{color:#7dd87d;font-weight:700;cursor:pointer;border:none;background:transparent;font-size:13px;}
-.settings-screen{display:none;}
-.settings-screen.active{display:block;}
-.main-screen.hidden{display:none;}
-.set-sec{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
-.set-grp-hdr{padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);}
-.set-grp-hdr:first-child{border-top:none;}
-.set-item{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--border);}
-.set-item-name{flex:1;font-size:14px;}
-.set-item-meta{font-size:12px;color:var(--text3);}
-.set-add{padding:13px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);cursor:pointer;color:var(--accent);font-size:13px;font-weight:500;}
-.e-btn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--text3);}
-.d-btn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--danger);font-weight:700;}
-.back-btn{font-size:13px;color:var(--accent);cursor:pointer;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
-.modal-overlay.open .modal{transform:translateY(0);}
+.a-lbl{font-size:13px;font-weight:600;flex:1;}
+.a-cnt{font-size:12px;color:var(--gray3);}
+.a-chev{font-size:11px;color:var(--gray3);transition:transform .2s;}
+.a-sec.col .a-chev{transform:rotate(-90deg);}
+.a-sec.col .a-body{display:none;}
+.a-prog{height:3px;background:var(--gray2);}
+.a-prog-fill{height:100%;transition:width .3s;}
+/* item */
+.iw{position:relative;overflow:hidden;border-top:1px solid var(--gray2);}
+.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--red);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;user-select:none;}
+.si{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--white);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
+.si.faded{opacity:.4;}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--gray2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;}
+.chk.done{background:var(--green);border-color:var(--green);color:#fff;}
+.iname{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.iname.done{text-decoration:line-through;color:var(--gray3);}
+.qty-c{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.qbtn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--gray2);background:var(--gray1);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;}
+.qbtn:active{background:var(--gray2);}
+.qnum{font-size:14px;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--gray2);}
+/* empty */
+.empty{text-align:center;padding:48px 24px;color:var(--gray3);}
+/* undo */
+#undo-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:var(--r);font-size:13px;display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+#undo-bar.show{opacity:1;pointer-events:all;}
+#undo-btn{color:#7dd87d;font-weight:700;cursor:pointer;border:none;background:transparent;font-size:13px;}
+/* settings */
+#settings{display:none;padding:12px 16px 80px;max-width:600px;margin:0 auto;}
+#settings.show{display:block;}
+#main-wrap.hide{display:none;}
+.set-card{background:var(--white);border-radius:var(--r);border:1px solid var(--gray2);margin-bottom:12px;overflow:hidden;}
+.set-grp{border-top:1px solid var(--gray2);padding:10px 14px;font-size:13px;font-weight:600;background:var(--gray1);display:flex;align-items:center;gap:8px;}
+.set-grp:first-child{border-top:none;}
+.set-row{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--gray2);}
+.set-name{flex:1;font-size:14px;}
+.set-meta{font-size:12px;color:var(--gray3);}
+.set-add{padding:13px 14px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--gray2);cursor:pointer;color:var(--green);font-size:13px;font-weight:500;}
+.ebtn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--text2);}
+.dbtn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--red);font-weight:700;}
+.back{font-size:13px;color:var(--green);cursor:pointer;}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.ov.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
+.ov.open .modal{transform:translateY(0);}
 .m-title{font-size:16px;font-weight:700;margin-bottom:16px;}
-.m-field{margin-bottom:12px;}
 .m-label{font-size:12px;color:var(--text2);margin-bottom:5px;}
-.m-input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--surface2);}
-.m-input:focus{border-color:var(--accent);}
-.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
-.c-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
-.c-swatch.sel{border-color:var(--text);}
-.m-actions{display:flex;gap:8px;margin-top:16px;}
-.m-btn{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--text);}
-.m-btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.qty-modal{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
-.qty-modal.open{opacity:1;pointer-events:all;}
-.qty-box{background:var(--surface);border-radius:var(--radius);padding:24px 20px;width:200px;text-align:center;}
-.qty-title{font-size:13px;color:var(--text2);margin-bottom:12px;}
-.qty-inp{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:24px;font-family:'DM Mono',monospace;text-align:center;outline:none;}
-.qty-inp:focus{border-color:var(--accent);}
-.qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
+.m-field{margin-bottom:12px;}
+.m-inp{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--gray1);}
+.m-inp:focus{border-color:var(--green);}
+.cp{display:flex;gap:8px;flex-wrap:wrap;}
+.csw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
+.csw.on{border-color:#333;}
+.m-acts{display:flex;gap:8px;margin-top:16px;}
+.mbtn{flex:1;padding:12px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--gray2);background:var(--gray1);color:var(--text);}
+.mbtn-p{background:var(--green);color:#fff;border-color:var(--green);}
+/* qty modal */
+#qty-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
+#qty-ov.open{opacity:1;pointer-events:all;}
+#qty-box{background:var(--white);border-radius:var(--r);padding:24px 20px;width:200px;text-align:center;}
+#qty-item-name{font-size:13px;color:var(--text2);margin-bottom:12px;}
+#qty-inp{width:100%;border:1px solid var(--gray2);border-radius:var(--rs);padding:10px;font-size:24px;text-align:center;outline:none;font-family:inherit;}
+#qty-inp:focus{border-color:var(--green);}
+#qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
 </style>
 </head>
 <body>
-<div class="header">
-  <div id="hdrLeft"><div class="header-title">🛒 買い物リスト</div></div>
-  <button class="icon-btn" id="settingsBtn">⚙️</button>
+
+<div id="hdr">
+  <div id="hdr-left"><span id="hdr-title">🛒 買い物リスト</span></div>
+  <button id="settings-btn">⚙️</button>
 </div>
 
-<div class="main-screen" id="mainScreen">
-  <div class="store-tabs" id="storeTabs"></div>
-  <div class="main" id="mainContent"></div>
+<div id="main-wrap">
+  <div id="tabs"><div id="tab-add">＋</div></div>
+  <div id="main"></div>
 </div>
 
-<div class="settings-screen" id="settingsScreen">
-  <div class="main" style="padding-top:16px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <div class="back-btn" id="backBtn">← 戻る</div>
-      <div style="font-size:16px;font-weight:700;">設定</div>
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;padding-left:2px;">スーパー・売り場</div>
-    <div class="set-sec" id="storeSettings"></div>
-    <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;padding-left:2px;">定番リスト</div>
-    <div class="set-sec" id="stapleSettings"></div>
+<div id="settings">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-top:4px;">
+    <span class="back" id="back-btn">← 戻る</span>
+    <span style="font-size:16px;font-weight:700;">設定</span>
   </div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">スーパー・売り場</div>
+  <div class="set-card" id="store-settings"></div>
+  <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;">定番リスト</div>
+  <div class="set-card" id="staple-settings"></div>
 </div>
 
 <!-- Aisle modal -->
-<div class="modal-overlay" id="aisleModal">
+<div class="ov" id="aisle-ov">
   <div class="modal">
-    <div class="m-title" id="aisleMTitle">売り場を追加</div>
-    <div class="m-field"><div class="m-label">売り場名</div><input class="m-input" id="aisleNameIn" placeholder="例：野菜・果物"></div>
-    <div class="m-field"><div class="m-label">色</div><div class="color-picker" id="colorPicker"></div></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="aisleSortIn" type="number" value="1"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('aisleModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveAisle()">保存</button>
+    <div class="m-title" id="aisle-m-title">売り場を追加</div>
+    <div class="m-field"><div class="m-label">売り場名</div><input class="m-inp" id="aisle-name-inp" placeholder="例：野菜・果物"></div>
+    <div class="m-field"><div class="m-label">色</div><div class="cp" id="cp"></div></div>
+    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-inp" id="aisle-sort-inp" type="number" value="1"></div>
+    <div class="m-acts">
+      <button class="mbtn" onclick="closeOv('aisle-ov')">キャンセル</button>
+      <button class="mbtn mbtn-p" onclick="saveAisle()">保存</button>
     </div>
   </div>
 </div>
 
 <!-- Store modal -->
-<div class="modal-overlay" id="storeModal">
+<div class="ov" id="store-ov">
   <div class="modal">
     <div class="m-title">スーパーを追加</div>
-    <div class="m-field"><div class="m-label">スーパー名</div><input class="m-input" id="storeNameIn" placeholder="例：業務スーパー"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('storeModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveStore()">保存</button>
+    <div class="m-field"><div class="m-label">スーパー名</div><input class="m-inp" id="store-name-inp" placeholder="例：業務スーパー"></div>
+    <div class="m-acts">
+      <button class="mbtn" onclick="closeOv('store-ov')">キャンセル</button>
+      <button class="mbtn mbtn-p" onclick="saveStore()">保存</button>
     </div>
   </div>
 </div>
 
 <!-- Staple modal -->
-<div class="modal-overlay" id="stapleModal">
+<div class="ov" id="staple-ov">
   <div class="modal">
-    <div class="m-title" id="stapleMTitle">定番アイテムを追加</div>
-    <div class="m-field"><div class="m-label">アイテム名</div><input class="m-input" id="stapleNameIn" placeholder="例：玉ねぎ"></div>
-    <div class="m-field"><div class="m-label">売り場</div><select class="m-input" id="stapleAisleIn"></select></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="stapleSortIn" type="number" value="1"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('stapleModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveStaple()">保存</button>
+    <div class="m-title" id="staple-m-title">定番アイテムを追加</div>
+    <div class="m-field"><div class="m-label">アイテム名</div><input class="m-inp" id="staple-name-inp" placeholder="例：玉ねぎ"></div>
+    <div class="m-field"><div class="m-label">売り場</div><select class="m-inp" id="staple-aisle-inp"></select></div>
+    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-inp" id="staple-sort-inp" type="number" value="1"></div>
+    <div class="m-acts">
+      <button class="mbtn" onclick="closeOv('staple-ov')">キャンセル</button>
+      <button class="mbtn mbtn-p" onclick="saveStaple()">保存</button>
     </div>
   </div>
 </div>
 
 <!-- Qty modal -->
-<div class="qty-modal" id="qtyModal">
-  <div class="qty-box">
-    <div class="qty-title" id="qtyName">数量を入力</div>
-    <input class="qty-inp" id="qtyIn" type="number" min="1" value="1">
-    <button class="qty-ok" onclick="saveQty()">OK</button>
+<div id="qty-ov">
+  <div id="qty-box">
+    <div id="qty-item-name">数量</div>
+    <input id="qty-inp" type="number" min="1" value="1">
+    <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
 
-<div class="undo-bar" id="undoBar">
-  <span id="undoMsg">削除しました</span>
-  <button class="undo-btn" onclick="undoDelete()">元に戻す</button>
-</div>
+<!-- Undo bar -->
+<div id="undo-bar"><span id="undo-msg">削除しました</span><button id="undo-btn" onclick="doUndo()">元に戻す</button></div>
 
 <script>
-const SURL='https://pfobhvsslpxuiglfacss.supabase.co';
-const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE';
-const db=supabase.createClient(SURL,SKEY);
-const COLS=['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
+const SB = supabase.createClient(
+  'https://pfobhvsslpxuiglfacss.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE'
+);
+const COLORS = ['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
 
-let stores=[],aisles=[],staples=[],items=[];
-let activeStore=null,editAisleId=null,editStapleId=null,aisleStore=null;
-let qtyItemId=null,staplesOpen=false,staplesCat=null;
-let isRec=false,recog=null,undoData=null,undoTimer=null;
-let realtimePaused=false;
+// --- State ---
+var stores=[], aisles=[], staples=[], items=[];
+var activeStore=null;
+var editAisleId=null, aisleStoreId=null;
+var editStapleId=null;
+var qtyItemId=null;
+var staplesOpen=false, staplesCat=null;
+var isRec=false, recog=null;
+var undoItem=null, undoTimer=null;
+var skipRT=false;
 
-async function init(){
-  await loadAll();
-  // Realtime only for sync between devices (partner's phone)
-  db.channel('rt').on('postgres_changes',{event:'*',schema:'public'},async()=>{
-    if(realtimePaused) return;
-    await loadAll(); render();
+// --- Boot ---
+async function boot() {
+  await reload();
+  SB.channel('c1').on('postgres_changes',{event:'*',schema:'public'}, function(){
+    if(!skipRT){ reload().then(function(){ drawAll(); }); }
   }).subscribe();
-  render();
+  drawAll();
 }
 
-async function loadAll(){
-  const [s,a,st,it]=await Promise.all([
-    db.from('stores').select('*'),
-    db.from('aisles').select('*').order('sort_order'),
-    db.from('staples').select('*').order('sort_order'),
-    db.from('shopping_items').select('*').order('created_at')
+async function reload() {
+  var r = await Promise.all([
+    SB.from('stores').select('*'),
+    SB.from('aisles').select('*').order('sort_order'),
+    SB.from('staples').select('*').order('sort_order'),
+    SB.from('shopping_items').select('*').order('created_at')
   ]);
-  stores=s.data||[];aisles=a.data||[];staples=st.data||[];items=it.data||[];
-  if(!activeStore&&stores.length) activeStore=stores[0].id;
+  stores  = r[0].data || [];
+  aisles  = r[1].data || [];
+  staples = r[2].data || [];
+  items   = r[3].data || [];
+  if (!activeStore && stores.length) activeStore = stores[0].id;
 }
 
-// Pause realtime, run DB op, update local state immediately, re-render, then resume
-async function withPause(dbOp, localUpdate){
-  realtimePaused=true;
-  await dbOp();
-  localUpdate && localUpdate();
-  render();
-  // Resume after short delay so realtime doesn't fire stale event
-  setTimeout(()=>{ realtimePaused=false; }, 1500);
+function pause(ms) { skipRT=true; setTimeout(function(){ skipRT=false; }, ms||2000); }
+
+// --- Draw ---
+function drawAll() { drawTabs(); drawMain(); if(document.getElementById('settings').classList.contains('show')) drawSettings(); }
+
+function drawTabs() {
+  var el = document.getElementById('tabs');
+  var h = '';
+  for (var i=0; i<stores.length; i++) {
+    var s = stores[i];
+    var n = 0;
+    for (var j=0; j<items.length; j++) { if(items[j].store_id===s.id && !items[j].checked) n++; }
+    var badge = n ? '<span class="tab-n">'+n+'</span>' : '';
+    var on = s.id===activeStore ? ' on' : '';
+    h += '<div class="tab'+on+'" onclick="setStore(\''+s.id+'\')">'+s.name+badge+'</div>';
+  }
+  h += '<div id="tab-add" onclick="openOv(\'store-ov\')">＋</div>';
+  el.innerHTML = h;
 }
 
-function render(){renderTabs();renderMain();if(document.getElementById('settingsScreen').classList.contains('active'))renderSettings();}
-
-function renderTabs(){
-  const el=document.getElementById('storeTabs');
-  let html='';
-  stores.forEach(s=>{
-    const n=items.filter(i=>i.store_id===s.id&&!i.checked).length;
-    const badge=n?'<span class="tab-badge">'+n+'</span>':'';
-    const active=s.id===activeStore?' active':'';
-    html+='<div class="store-tab'+active+'" onclick="setStore(''+s.id+'')">'+s.name+badge+'</div>';
+function drawMain() {
+  var el = document.getElementById('main');
+  if (!activeStore) {
+    el.innerHTML = '<div class="empty">⚙️設定からスーパーを追加してください</div>';
+    return;
+  }
+  var sa = aisles.filter(function(a){ return a.store_id===activeStore; });
+  var si = items.filter(function(i){ return i.store_id===activeStore; });
+  var ss = staples.filter(function(s){
+    for(var i=0;i<sa.length;i++){ if(sa[i].id===s.aisle_id) return true; } return false;
   });
-  html+='<div class="store-tab-add" onclick="openModal('storeModal')">＋</div>';
-  el.innerHTML=html;
-}
 
-function renderMain(){
-  const el=document.getElementById('mainContent');
-  if(!activeStore){el.innerHTML='<div class="empty"><div class="empty-icon">🏪</div><div>⚙️設定からスーパーを追加してください</div></div>';return;}
-  const sa=aisles.filter(a=>a.store_id===activeStore);
-  const si=items.filter(i=>i.store_id===activeStore);
-  const ss=staples.filter(s=>sa.find(a=>a.id===s.aisle_id));
+  var h = '';
+  // Add box
+  h += '<div id="add-box">';
+  h += '<div id="add-row">';
+  h += '<input id="add-input" placeholder="アイテムを追加..." onkeydown="if(event.key===\'Enter\')doAdd()">';
+  h += '<button id="mic-btn" class="'+(isRec?'rec':'')+'" onclick="toggleMic()">🎤</button>';
+  h += '<button id="do-add" onclick="doAdd()">追加</button>';
+  h += '</div>';
+  h += '<div id="aisle-row"><select id="aisle-sel"><option value="">売り場（未分類）</option>';
+  for(var i=0;i<sa.length;i++) h += '<option value="'+sa[i].id+'">'+sa[i].name+'</option>';
+  h += '</select></div>';
+  h += '<div id="staples-toggle" onclick="toggleStaples()"><span>📋 定番リストから追加</span><span>'+(staplesOpen?'▲':'▼')+'</span></div>';
+  h += '<div id="staples-panel"'+(staplesOpen?' class="open"':'')+'>';
+  h += '<div id="staple-cats">';
+  h += '<div class="s-cat'+(staplesCat===null?' on':'')+'" onclick="setCat(null)">すべて</div>';
+  for(var i=0;i<sa.length;i++){
+    var a=sa[i];
+    var on=staplesCat===a.id;
+    var style=on?'background:'+a.color+';border-color:'+a.color+';color:#fff':'color:'+a.color+';border-color:'+a.color+'40';
+    h += '<div class="s-cat'+(on?' on':'')+'" style="'+style+'" onclick="setCat(\''+a.id+'\')">'+a.name+'</div>';
+  }
+  h += '</div><div id="staple-chips">';
+  var filtered = ss.filter(function(s){ return staplesCat===null || s.aisle_id===staplesCat; });
+  if(filtered.length===0) h += '<span style="color:var(--gray3);font-size:13px;">定番アイテムがありません</span>';
+  for(var i=0;i<filtered.length;i++) h += '<div class="s-chip" onclick="addFromStaple(\''+filtered[i].id+'\')">'+filtered[i].name+'</div>';
+  h += '</div></div></div>';
 
-  let html=`<div class="quick-add">
-    <div class="quick-row">
-      <input class="q-input" id="qIn" placeholder="アイテムを追加..." onkeydown="if(event.key==='Enter')doAdd()">
-      <button class="mic-btn${isRec?' rec':''}" id="micB" onclick="toggleMic()">🎤</button>
-      <button class="add-btn" onclick="doAdd()">追加</button>
-    </div>
-    <div class="quick-meta">
-      <select class="q-select" id="qAisle">
-        <option value="">売り場（未分類）</option>
-        ${sa.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}
-      </select>
-    </div>
-    <div class="staples-toggle" onclick="toggleStaples()">
-      <span>📋 定番リストから追加</span><span>${staplesOpen?'▲':'▼'}</span>
-    </div>
-    <div class="staples-body${staplesOpen?' open':''}">
-      <div class="s-cats">
-        <div class="s-cat${staplesCat===null?' active':''}" onclick="setCat(null)">すべて</div>
-        ${sa.map(a=>`<div class="s-cat${staplesCat===a.id?' active':''}" onclick="setCat('${a.id}')" style="${staplesCat===a.id?`background:${a.color};border-color:${a.color};color:#fff`:`color:${a.color};border-color:${a.color}40`}">${a.name}</div>`).join('')}
-      </div>
-      <div class="s-chips">
-        ${(ss.filter(s=>staplesCat===null||s.aisle_id===staplesCat)).map(s=>`<div class="s-chip" onclick="addStaple('${s.id}')">${s.name}</div>`).join('')||'<span style="color:var(--text3);font-size:13px;">定番アイテムがありません</span>'}
-      </div>
-    </div>
-  </div>`;
-
-  if(!si.length){html+='<div class="empty"><div class="empty-icon">✅</div><div>リストは空です</div></div>';}
-  else{
-    sa.forEach(a=>{
-      const ai=si.filter(i=>i.aisle_id===a.id);
-      if(!ai.length)return;
-      const done=ai.filter(i=>i.checked).length;
-      html+=`<div class="aisle-sec" id="sec-${a.id}">
-        <div class="aisle-hdr" style="background:${a.color}12;" onclick="togAisle('${a.id}')">
-          <div class="a-dot" style="background:${a.color}"></div>
-          <div class="a-name">${a.name}</div>
-          <div class="a-cnt">${done}/${ai.length}</div>
-          <div class="a-chev">▾</div>
-        </div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${ai.length?done/ai.length*100:0}%;background:${a.color}50"></div></div>
-        <div class="aisle-body">${ai.map(renderItem).join('')}</div>
-      </div>`;
-    });
-    const na=si.filter(i=>!i.aisle_id);
-    if(na.length){
-      html+=`<div class="aisle-sec" id="sec-none">
-        <div class="aisle-hdr" style="background:#f0f0f0;" onclick="togAisle('none')">
-          <div class="a-dot" style="background:#999"></div>
-          <div class="a-name">未分類</div>
-          <div class="a-cnt">${na.length}</div>
-          <div class="a-chev">▾</div>
-        </div>
-        <div class="aisle-body">${na.map(renderItem).join('')}</div>
-      </div>`;
+  // Items
+  if (si.length===0) {
+    h += '<div class="empty">リストは空です ✅</div>';
+  } else {
+    // By aisle
+    for(var ai=0;ai<sa.length;ai++){
+      var aisle=sa[ai];
+      var ait=si.filter(function(it){ return it.aisle_id===aisle.id; });
+      if(!ait.length) continue;
+      var done=ait.filter(function(it){return it.checked;}).length;
+      var pct=Math.round(done/ait.length*100);
+      h += '<div class="a-sec" id="sec-'+aisle.id+'">';
+      h += '<div class="a-hdr" style="background:'+aisle.color+'12" onclick="togSec(\''+aisle.id+'\')">';
+      h += '<div class="a-dot" style="background:'+aisle.color+'"></div>';
+      h += '<div class="a-lbl">'+aisle.name+'</div>';
+      h += '<div class="a-cnt">'+done+'/'+ait.length+'</div>';
+      h += '<div class="a-chev">▾</div></div>';
+      h += '<div class="a-prog"><div class="a-prog-fill" style="width:'+pct+'%;background:'+aisle.color+'60"></div></div>';
+      h += '<div class="a-body">';
+      for(var ii=0;ii<ait.length;ii++) h += itemHTML(ait[ii]);
+      h += '</div></div>';
+    }
+    // Uncategorized
+    var noA=si.filter(function(it){return !it.aisle_id;});
+    if(noA.length){
+      h += '<div class="a-sec" id="sec-none">';
+      h += '<div class="a-hdr" style="background:#f0f0f0" onclick="togSec(\'none\')">';
+      h += '<div class="a-dot" style="background:#999"></div>';
+      h += '<div class="a-lbl">未分類</div>';
+      h += '<div class="a-cnt">'+noA.length+'</div>';
+      h += '<div class="a-chev">▾</div></div>';
+      h += '<div class="a-body">';
+      for(var ii=0;ii<noA.length;ii++) h += itemHTML(noA[ii]);
+      h += '</div></div>';
     }
   }
-  el.innerHTML=html;
+
+  el.innerHTML = h;
   attachSwipe();
 }
 
-function renderItem(it){
-  // checked items: no swipe/delete bg, just show faded with check
-  if(it.checked){
-    return `<div class="item-wrap" id="w-${it.id}">
-      <div class="s-item faded" id="i-${it.id}">
-        <div class="chk done" onclick="togChk('${it.id}')">✓</div>
-        <div class="iname-wrap"><div class="iname done">${it.name}</div></div>
-        <div style="color:var(--text3);font-size:13px;font-family:'DM Mono',monospace;">${it.quantity}</div>
-      </div>
-    </div>`;
+function itemHTML(it) {
+  var h = '<div class="iw" id="iw-'+it.id+'">';
+  if (!it.checked) {
+    h += '<div class="del-bg" onclick="delItem(\''+it.id+'\')">削除</div>';
   }
-  return `<div class="item-wrap" id="w-${it.id}">
-    <div class="del-bg" onclick="swipeDel('${it.id}')">削除</div>
-    <div class="s-item" id="i-${it.id}">
-      <div class="chk" onclick="togChk('${it.id}')"></div>
-      <div class="iname-wrap"><div class="iname">${it.name}</div></div>
-      <div class="qty-ctrl">
-        <button class="q-btn" onclick="chgQty('${it.id}',-1)">−</button>
-        <div class="q-num" onclick="openQty('${it.id}','${it.name.replace(/'/g,"\'").replace(/"/g,'&quot;')}',${it.quantity})">${it.quantity}</div>
-        <button class="q-btn" onclick="chgQty('${it.id}',1)">＋</button>
-      </div>
-    </div>
-  </div>`;
+  h += '<div class="si'+(it.checked?' faded':'')+'" id="si-'+it.id+'">';
+  h += '<div class="chk'+(it.checked?' done':'')+'" onclick="togChk(\''+it.id+'\')">'+( it.checked?'✓':'' )+'</div>';
+  h += '<div class="iname'+(it.checked?' done':'\'")>'+it.name+'</div>';
+  if (!it.checked) {
+    h += '<div class="qty-c">';
+    h += '<button class="qbtn" onclick="chgQty(\''+it.id+'\',-1)">−</button>';
+    h += '<div class="qnum" onclick="openQty(\''+it.id+'\',\''+it.name.replace(/'/g,'&#39;')+'\','+it.quantity+')">'+it.quantity+'</div>';
+    h += '<button class="qbtn" onclick="chgQty(\''+it.id+'\',1)">＋</button>';
+    h += '</div>';
+  }
+  h += '</div></div>';
+  return h;
 }
 
-function attachSwipe(){
-  document.querySelectorAll('.s-item:not(.faded)').forEach(el=>{
-    let sx=0,sy=0,dx=0,was=false;
-    el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;was=el.classList.contains('swiped');},{passive:true});
-    el.addEventListener('touchmove',e=>{
-      dx=e.touches[0].clientX-sx;
-      if(Math.abs(e.touches[0].clientY-sy)>Math.abs(dx))return;
-      const mv=was?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
-      el.style.transition='none';el.style.transform=`translateX(${mv}px)`;
-    },{passive:true});
-    el.addEventListener('touchend',()=>{
-      el.style.transition='transform .2s';
-      if(!was&&dx<-44){el.style.transform='translateX(-88px)';el.classList.add('swiped');}
-      else if(was&&dx>44){el.style.transform='translateX(0)';el.classList.remove('swiped');}
-      else{el.style.transform=was?'translateX(-88px)':'translateX(0)';}
-    });
-  });
+// Swipe to delete
+function attachSwipe() {
+  var els = document.querySelectorAll('.si:not(.faded)');
+  for (var i=0;i<els.length;i++) {
+    (function(el){
+      var sx=0, sy=0, dx=0, swiped=false;
+      el.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; swiped=el.classList.contains('sw'); }, {passive:true});
+      el.addEventListener('touchmove', function(e){
+        dx=e.touches[0].clientX-sx;
+        var dy=Math.abs(e.touches[0].clientY-sy);
+        if(dy>Math.abs(dx)) return;
+        var mv=swiped?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
+        el.style.transition='none'; el.style.transform='translateX('+mv+'px)';
+      },{passive:true});
+      el.addEventListener('touchend', function(){
+        el.style.transition='transform .2s';
+        if(!swiped&&dx<-44){ el.style.transform='translateX(-88px)'; el.classList.add('sw'); swiped=true; }
+        else if(swiped&&dx>44){ el.style.transform='translateX(0)'; el.classList.remove('sw'); swiped=false; }
+        else { el.style.transform=swiped?'translateX(-88px)':'translateX(0)'; }
+      });
+    })(els[i]);
+  }
 }
 
-async function swipeDel(id){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  undoData={...it};
-  await withPause(
-    ()=>db.from('shopping_items').delete().eq('id',id),
-    ()=>{ items=items.filter(i=>i.id!==id); }
-  );
-  if(undoTimer)clearTimeout(undoTimer);
-  document.getElementById('undoMsg').textContent=`「${it.name}」を削除`;
-  document.getElementById('undoBar').classList.add('show');
-  undoTimer=setTimeout(()=>{document.getElementById('undoBar').classList.remove('show');undoData=null;},4000);
-}
-async function undoDelete(){
-  if(!undoData)return;
-  const{id,...r}=undoData;
-  realtimePaused=true;
-  await db.from('shopping_items').insert(r);
-  items.push(undoData);
-  document.getElementById('undoBar').classList.remove('show');
-  undoData=null;if(undoTimer)clearTimeout(undoTimer);
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
-}
+// --- Actions ---
+function setStore(id) { activeStore=id; drawAll(); }
+function toggleStaples() { staplesOpen=!staplesOpen; drawMain(); }
+function setCat(id) { staplesCat=id; drawMain(); }
+function togSec(id) { var el=document.getElementById('sec-'+id); if(el) el.classList.toggle('col'); }
 
-function setStore(id){activeStore=id;render();}
+async function doAdd() {
+  var inp = document.getElementById('add-input');
+  var name = inp.value.trim();
+  if (!name || !activeStore) return;
+  var aid = document.getElementById('aisle-sel').value || null;
 
-async function doAdd(){
-  const inp=document.getElementById('qIn');
-  const name=inp.value.trim();
-  if(!name||!activeStore)return;
-  const aid=document.getElementById('qAisle').value||null;
-  
-  // Insert to DB
-  realtimePaused=true;
-  const res=await db.from('shopping_items').insert({store_id:activeStore,aisle_id:aid,name,quantity:1,checked:false}).select().single();
-  if(res.data) items.push(res.data);
-  
-  // Auto-register to staples if aisle selected and not already there
-  if(aid){
-    const already=staples.find(s=>s.name===name&&s.aisle_id===aid);
-    if(!already){
-      const mx=Math.max(0,...staples.filter(s=>s.aisle_id===aid).map(s=>s.sort_order||0));
-      const sr=await db.from('staples').insert({aisle_id:aid,name,sort_order:mx+1}).select().single();
-      if(sr.data) staples.push(sr.data);
+  pause(2000);
+  var r = await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:aid,name:name,quantity:1,checked:false}).select().single();
+  if (r.data) items.push(r.data);
+
+  if (aid) {
+    var already=false;
+    for(var i=0;i<staples.length;i++){ if(staples[i].name===name && staples[i].aisle_id===aid){ already=true; break; } }
+    if (!already) {
+      var mx=0;
+      for(var i=0;i<staples.length;i++){ if(staples[i].aisle_id===aid && (staples[i].sort_order||0)>mx) mx=staples[i].sort_order||0; }
+      var sr = await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:mx+1}).select().single();
+      if (sr.data) staples.push(sr.data);
     }
   }
-  inp.value='';
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  inp.value = '';
+  drawAll();
 }
 
-async function addStaple(sid){
-  const s=staples.find(x=>x.id===sid);if(!s||!activeStore)return;
-  const ex=items.find(i=>i.store_id===activeStore&&i.name===s.name&&!i.checked);
-  realtimePaused=true;
+async function addFromStaple(sid) {
+  var s=null;
+  for(var i=0;i<staples.length;i++){ if(staples[i].id===sid){ s=staples[i]; break; } }
+  if(!s||!activeStore) return;
+  pause(2000);
+  var ex=null;
+  for(var i=0;i<items.length;i++){ if(items[i].store_id===activeStore&&items[i].name===s.name&&!items[i].checked){ ex=items[i]; break; } }
   if(ex){
-    await db.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
-    ex.quantity+=1;
+    await SB.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
+    ex.quantity++;
   } else {
-    const r=await db.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:1,checked:false}).select().single();
+    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:1,checked:false}).select().single();
     if(r.data) items.push(r.data);
   }
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  drawAll();
 }
 
-async function togChk(id){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  realtimePaused=true;
-  await db.from('shopping_items').update({checked:!it.checked}).eq('id',id);
+async function togChk(id) {
+  var it=null;
+  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  if(!it) return;
+  pause(2000);
+  await SB.from('shopping_items').update({checked:!it.checked}).eq('id',id);
   it.checked=!it.checked;
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  drawAll();
 }
 
-async function chgQty(id,d){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  const nq=Math.max(1,it.quantity+d);
-  realtimePaused=true;
-  await db.from('shopping_items').update({quantity:nq}).eq('id',id);
+async function chgQty(id, d) {
+  var it=null;
+  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  if(!it) return;
+  var nq=Math.max(1,it.quantity+d);
+  pause(2000);
+  await SB.from('shopping_items').update({quantity:nq}).eq('id',id);
   it.quantity=nq;
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  drawAll();
 }
 
-function openQty(id,name,qty){
+async function delItem(id) {
+  var it=null;
+  for(var i=0;i<items.length;i++){ if(items[i].id===id){ it=items[i]; break; } }
+  if(!it) return;
+  undoItem={id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};
+  pause(2000);
+  await SB.from('shopping_items').delete().eq('id',id);
+  items=items.filter(function(i){ return i.id!==id; });
+  drawAll();
+  if(undoTimer) clearTimeout(undoTimer);
+  document.getElementById('undo-msg').textContent='「'+it.name+'」を削除';
+  document.getElementById('undo-bar').classList.add('show');
+  undoTimer=setTimeout(function(){ document.getElementById('undo-bar').classList.remove('show'); undoItem=null; },4000);
+}
+
+async function doUndo() {
+  if(!undoItem) return;
+  pause(2000);
+  var r=await SB.from('shopping_items').insert({store_id:undoItem.store_id,aisle_id:undoItem.aisle_id,name:undoItem.name,quantity:undoItem.quantity,checked:undoItem.checked}).select().single();
+  if(r.data) items.push(r.data);
+  document.getElementById('undo-bar').classList.remove('show');
+  undoItem=null; if(undoTimer) clearTimeout(undoTimer);
+  drawAll();
+}
+
+// Qty modal
+function openQty(id, name, qty) {
   qtyItemId=id;
-  document.getElementById('qtyName').textContent=name;
-  document.getElementById('qtyIn').value=qty;
-  document.getElementById('qtyModal').classList.add('open');
-  setTimeout(()=>document.getElementById('qtyIn').select(),100);
+  document.getElementById('qty-item-name').textContent=name;
+  document.getElementById('qty-inp').value=qty;
+  document.getElementById('qty-ov').classList.add('open');
+  setTimeout(function(){ document.getElementById('qty-inp').select(); },100);
 }
-async function saveQty(){
-  const q=parseInt(document.getElementById('qtyIn').value)||1;
+async function saveQty() {
+  var q=parseInt(document.getElementById('qty-inp').value)||1;
   if(qtyItemId){
-    const it=items.find(i=>i.id===qtyItemId);
-    realtimePaused=true;
-    await db.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
-    if(it) it.quantity=Math.max(1,q);
-    render();
-    setTimeout(()=>{ realtimePaused=false; },1500);
+    var it=null;
+    for(var i=0;i<items.length;i++){ if(items[i].id===qtyItemId){ it=items[i]; break; } }
+    if(it){
+      pause(2000);
+      await SB.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
+      it.quantity=Math.max(1,q);
+      drawAll();
+    }
   }
-  document.getElementById('qtyModal').classList.remove('open');qtyItemId=null;
+  document.getElementById('qty-ov').classList.remove('open');
+  qtyItemId=null;
 }
-document.getElementById('qtyModal').addEventListener('click',e=>{if(e.target===document.getElementById('qtyModal'))document.getElementById('qtyModal').classList.remove('open');});
-document.getElementById('qtyIn').addEventListener('keydown',e=>{if(e.key==='Enter')saveQty();});
+document.getElementById('qty-ov').addEventListener('click',function(e){ if(e.target===document.getElementById('qty-ov')) document.getElementById('qty-ov').classList.remove('open'); });
+document.getElementById('qty-inp').addEventListener('keydown',function(e){ if(e.key==='Enter') saveQty(); });
 
-function toggleStaples(){staplesOpen=!staplesOpen;renderMain();}
-function setCat(id){staplesCat=id;renderMain();}
-function togAisle(id){const el=document.getElementById(`sec-${id}`);if(el)el.classList.toggle('collapsed');}
-
-function toggleMic(){
-  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){alert('このブラウザは音声入力に対応していません');return;}
-  if(isRec){recog.stop();return;}
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  recog=new SR();recog.lang='ja-JP';
-  recog.onresult=e=>{document.getElementById('qIn').value=e.results[0][0].transcript;};
-  recog.onend=()=>{isRec=false;document.getElementById('micB') && document.getElementById('micB').classList.remove('rec');};
-  recog.start();isRec=true;document.getElementById('micB').classList.add('rec');
+// Voice
+function toggleMic() {
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){ alert('このブラウザは音声入力非対応です'); return; }
+  if(isRec){ recog.stop(); return; }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR(); recog.lang='ja-JP';
+  recog.onresult=function(e){ var inp=document.getElementById('add-input'); if(inp) inp.value=e.results[0][0].transcript; };
+  recog.onend=function(){ isRec=false; var b=document.getElementById('mic-btn'); if(b) b.className=''; };
+  recog.start(); isRec=true; var b=document.getElementById('mic-btn'); if(b) b.className='rec';
 }
 
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');editAisleId=null;editStapleId=null;}
-document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+// Overlays
+function openOv(id){ document.getElementById(id).classList.add('open'); }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); editAisleId=null; editStapleId=null; }
+document.querySelectorAll('.ov').forEach(function(el){ el.addEventListener('click',function(e){ if(e.target===el) el.classList.remove('open'); }); });
 
-function openAddAisle(sid){
-  aisleStore=sid;editAisleId=null;
-  document.getElementById('aisleMTitle').textContent='売り場を追加';
-  document.getElementById('aisleNameIn').value='';
-  document.getElementById('aisleSortIn').value=aisles.filter(a=>a.store_id===sid).length+1;
-  renderCP(COLS[0]);openModal('aisleModal');
+// Color picker
+function drawCP(sel) {
+  var h='';
+  for(var i=0;i<COLORS.length;i++){
+    h+='<div class="csw'+(COLORS[i]===sel?' on':'')+'" style="background:'+COLORS[i]+'" onclick="pickColor(\''+COLORS[i]+'\')"></div>';
+  }
+  document.getElementById('cp').innerHTML=h;
 }
-function openEditAisle(id){
-  const a=aisles.find(x=>x.id===id);if(!a)return;
-  editAisleId=id;aisleStore=a.store_id;
-  document.getElementById('aisleMTitle').textContent='売り場を編集';
-  document.getElementById('aisleNameIn').value=a.name;
-  document.getElementById('aisleSortIn').value=a.sort_order;
-  renderCP(a.color);openModal('aisleModal');
+function pickColor(c){ drawCP(c); }
+function getColor(){ var el=document.querySelector('.csw.on'); return el?el.style.backgroundColor:COLORS[0]; }
+
+// Aisle
+function openAddAisle(sid) {
+  aisleStoreId=sid; editAisleId=null;
+  document.getElementById('aisle-m-title').textContent='売り場を追加';
+  document.getElementById('aisle-name-inp').value='';
+  document.getElementById('aisle-sort-inp').value=aisles.filter(function(a){return a.store_id===sid;}).length+1;
+  drawCP(COLORS[0]); openOv('aisle-ov');
 }
-function renderCP(sel){
-  document.getElementById('colorPicker').innerHTML=COLS.map(c=>`<div class="c-swatch${c===sel?' sel':''}" style="background:${c}" onclick="selCol('${c}')"></div>`).join('');
+function openEditAisle(id) {
+  var a=null; for(var i=0;i<aisles.length;i++){if(aisles[i].id===id){a=aisles[i];break;}}
+  if(!a) return;
+  editAisleId=id; aisleStoreId=a.store_id;
+  document.getElementById('aisle-m-title').textContent='売り場を編集';
+  document.getElementById('aisle-name-inp').value=a.name;
+  document.getElementById('aisle-sort-inp').value=a.sort_order;
+  drawCP(a.color); openOv('aisle-ov');
 }
-function selCol(c){renderCP(c);}
-async function saveAisle(){
-  const name=document.getElementById('aisleNameIn').value.trim();
-  const sort=parseInt(document.getElementById('aisleSortIn').value)||1;
-  const color=document.querySelector('.c-swatch.sel')?.style.backgroundColor||COLS[0];
-  if(!name)return;
-  realtimePaused=true;
+async function saveAisle() {
+  var name=document.getElementById('aisle-name-inp').value.trim();
+  var sort=parseInt(document.getElementById('aisle-sort-inp').value)||1;
+  var color=getColor();
+  if(!name) return;
+  pause(2000);
   if(editAisleId){
-    await db.from('aisles').update({name,color,sort_order:sort}).eq('id',editAisleId);
-    const a=aisles.find(x=>x.id===editAisleId);
-    if(a){a.name=name;a.color=color;a.sort_order=sort;}
+    await SB.from('aisles').update({name:name,color:color,sort_order:sort}).eq('id',editAisleId);
+    for(var i=0;i<aisles.length;i++){ if(aisles[i].id===editAisleId){aisles[i].name=name;aisles[i].color=color;aisles[i].sort_order=sort;break;} }
   } else {
-    const r=await db.from('aisles').insert({store_id:aisleStore,name,color,sort_order:sort}).select().single();
-    if(r.data) aisles.push(r.data);
-    aisles.sort((a,b)=>a.sort_order-b.sort_order);
+    var r=await SB.from('aisles').insert({store_id:aisleStoreId,name:name,color:color,sort_order:sort}).select().single();
+    if(r.data){ aisles.push(r.data); aisles.sort(function(a,b){return a.sort_order-b.sort_order;}); }
   }
-  closeModal('aisleModal');render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  closeOv('aisle-ov'); drawAll();
 }
-async function deleteAisle(id){
-  if(!confirm('この売り場を削除しますか？'))return;
-  realtimePaused=true;
-  await db.from('staples').delete().eq('aisle_id',id);
-  await db.from('shopping_items').update({aisle_id:null}).eq('aisle_id',id);
-  await db.from('aisles').delete().eq('id',id);
-  staples=staples.filter(s=>s.aisle_id!==id);
-  items.forEach(i=>{if(i.aisle_id===id)i.aisle_id=null;});
-  aisles=aisles.filter(a=>a.id!==id);
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+async function deleteAisle(id) {
+  if(!confirm('この売り場を削除しますか？')) return;
+  pause(2000);
+  await SB.from('staples').delete().eq('aisle_id',id);
+  await SB.from('shopping_items').update({aisle_id:null}).eq('aisle_id',id);
+  await SB.from('aisles').delete().eq('id',id);
+  staples=staples.filter(function(s){return s.aisle_id!==id;});
+  for(var i=0;i<items.length;i++){if(items[i].aisle_id===id) items[i].aisle_id=null;}
+  aisles=aisles.filter(function(a){return a.id!==id;});
+  drawAll();
 }
 
-async function saveStore(){
-  const name=document.getElementById('storeNameIn').value.trim();if(!name)return;
-  realtimePaused=true;
-  const r=await db.from('stores').insert({name}).select().single();
-  if(r.data){stores.push(r.data);activeStore=r.data.id;}
-  closeModal('storeModal');document.getElementById('storeNameIn').value='';
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+// Store
+async function saveStore() {
+  var name=document.getElementById('store-name-inp').value.trim(); if(!name) return;
+  pause(2000);
+  var r=await SB.from('stores').insert({name:name}).select().single();
+  if(r.data){stores.push(r.data); activeStore=r.data.id;}
+  closeOv('store-ov'); document.getElementById('store-name-inp').value=''; drawAll();
 }
-async function deleteStore(id){
-  if(!confirm('このスーパーを削除しますか？'))return;
-  realtimePaused=true;
-  await db.from('shopping_items').delete().eq('store_id',id);
-  const sa=aisles.filter(a=>a.store_id===id);
-  for(const a of sa)await db.from('staples').delete().eq('aisle_id',a.id);
-  await db.from('aisles').delete().eq('store_id',id);
-  await db.from('stores').delete().eq('id',id);
-  items=items.filter(i=>i.store_id!==id);
-  sa.forEach(a=>{staples=staples.filter(s=>s.aisle_id!==a.id);});
-  aisles=aisles.filter(a=>a.store_id!==id);
-  stores=stores.filter(s=>s.id!==id);
+async function deleteStore(id) {
+  if(!confirm('このスーパーを削除しますか？')) return;
+  pause(2000);
+  await SB.from('shopping_items').delete().eq('store_id',id);
+  var sa=aisles.filter(function(a){return a.store_id===id;});
+  for(var i=0;i<sa.length;i++) await SB.from('staples').delete().eq('aisle_id',sa[i].id);
+  await SB.from('aisles').delete().eq('store_id',id);
+  await SB.from('stores').delete().eq('id',id);
+  items=items.filter(function(i){return i.store_id!==id;});
+  sa.forEach(function(a){staples=staples.filter(function(s){return s.aisle_id!==a.id;});});
+  aisles=aisles.filter(function(a){return a.store_id!==id;});
+  stores=stores.filter(function(s){return s.id!==id;});
   if(activeStore===id) activeStore=stores.length?stores[0].id:null;
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  drawAll();
 }
 
-function openAddStaple(){
+// Staples
+function openAddStaple() {
   editStapleId=null;
-  document.getElementById('stapleMTitle').textContent='定番アイテムを追加';
-  document.getElementById('stapleNameIn').value='';
-  const sel=document.getElementById('stapleAisleIn');
-  sel.innerHTML=aisles.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-  document.getElementById('stapleSortIn').value=1;
-  openModal('stapleModal');
+  document.getElementById('staple-m-title').textContent='定番アイテムを追加';
+  document.getElementById('staple-name-inp').value='';
+  var sel=document.getElementById('staple-aisle-inp');
+  sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'">'+aisles[i].name+'</option>';
+  document.getElementById('staple-sort-inp').value=1;
+  openOv('staple-ov');
 }
-function openEditStaple(id){
-  const s=staples.find(x=>x.id===id);if(!s)return;
+function openEditStaple(id) {
+  var s=null; for(var i=0;i<staples.length;i++){if(staples[i].id===id){s=staples[i];break;}}
+  if(!s) return;
   editStapleId=id;
-  document.getElementById('stapleMTitle').textContent='定番アイテムを編集';
-  document.getElementById('stapleNameIn').value=s.name;
-  const sel=document.getElementById('stapleAisleIn');
-  sel.innerHTML=aisles.map(a=>`<option value="${a.id}"${a.id===s.aisle_id?' selected':''}>${a.name}</option>`).join('');
-  document.getElementById('stapleSortIn').value=s.sort_order||1;
-  openModal('stapleModal');
+  document.getElementById('staple-m-title').textContent='定番アイテムを編集';
+  document.getElementById('staple-name-inp').value=s.name;
+  var sel=document.getElementById('staple-aisle-inp');
+  sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'"'+(aisles[i].id===s.aisle_id?' selected':'')+'>'+aisles[i].name+'</option>';
+  document.getElementById('staple-sort-inp').value=s.sort_order||1;
+  openOv('staple-ov');
 }
-async function saveStaple(){
-  const name=document.getElementById('stapleNameIn').value.trim();
-  const aid=document.getElementById('stapleAisleIn').value;
-  const sort=parseInt(document.getElementById('stapleSortIn').value)||1;
-  if(!name||!aid)return;
-  realtimePaused=true;
+async function saveStaple() {
+  var name=document.getElementById('staple-name-inp').value.trim();
+  var aid=document.getElementById('staple-aisle-inp').value;
+  var sort=parseInt(document.getElementById('staple-sort-inp').value)||1;
+  if(!name||!aid) return;
+  pause(2000);
   if(editStapleId){
-    await db.from('staples').update({name,aisle_id:aid,sort_order:sort}).eq('id',editStapleId);
-    const s=staples.find(x=>x.id===editStapleId);
-    if(s){s.name=name;s.aisle_id=aid;s.sort_order=sort;}
+    await SB.from('staples').update({name:name,aisle_id:aid,sort_order:sort}).eq('id',editStapleId);
+    for(var i=0;i<staples.length;i++){if(staples[i].id===editStapleId){staples[i].name=name;staples[i].aisle_id=aid;staples[i].sort_order=sort;break;}}
   } else {
-    const r=await db.from('staples').insert({aisle_id:aid,name,sort_order:sort}).select().single();
+    var r=await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:sort}).select().single();
     if(r.data) staples.push(r.data);
   }
-  closeModal('stapleModal');render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+  closeOv('staple-ov'); drawAll();
 }
-async function deleteStaple(id){
-  if(!confirm('この定番アイテムを削除しますか？'))return;
-  realtimePaused=true;
-  await db.from('staples').delete().eq('id',id);
-  staples=staples.filter(s=>s.id!==id);
-  render();
-  setTimeout(()=>{ realtimePaused=false; },1500);
+async function deleteStaple(id) {
+  if(!confirm('この定番アイテムを削除しますか？')) return;
+  pause(2000);
+  await SB.from('staples').delete().eq('id',id);
+  staples=staples.filter(function(s){return s.id!==id;});
+  drawAll();
 }
 
-function renderSettings(){
-  const se=document.getElementById('storeSettings');
-  const ste=document.getElementById('stapleSettings');
-  if(!se||!ste)return;
-  // Build store settings
-  let seHTML = '';
-  stores.forEach(function(s){
-    const sa = aisles.filter(function(a){ return a.store_id===s.id; });
-    seHTML += '<div>';
-    seHTML += '<div class="set-grp-hdr"><span style="flex:1">'+s.name+'</span><button class="d-btn" onclick="deleteStore(''+s.id+'')">削除</button></div>';
-    sa.forEach(function(a){
-      seHTML += '<div class="set-item">';
-      seHTML += '<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
-      seHTML += '<div class="set-item-name">'+a.name+'</div>';
-      seHTML += '<div class="set-item-meta">順'+a.sort_order+'</div>';
-      seHTML += '<button class="e-btn" onclick="openEditAisle(''+a.id+'')">✏️</button>';
-      seHTML += '<button class="d-btn" onclick="deleteAisle(''+a.id+'')">✕</button>';
-      seHTML += '</div>';
-    });
-    seHTML += '<div class="set-add" onclick="openAddAisle(''+s.id+'')">＋ 売り場を追加</div>';
-    seHTML += '</div>';
-  });
-  seHTML += '<div class="set-add" onclick="openModal('storeModal')">＋ スーパーを追加</div>';
-  se.innerHTML = seHTML;
+// Settings
+function drawSettings() {
+  var se=document.getElementById('store-settings');
+  var ste=document.getElementById('staple-settings');
+  var h='';
+  for(var i=0;i<stores.length;i++){
+    var s=stores[i];
+    var sa=aisles.filter(function(a){return a.store_id===s.id;});
+    h+='<div class="set-grp"><span style="flex:1">'+s.name+'</span><button class="dbtn" onclick="deleteStore(\''+s.id+'\')">削除</button></div>';
+    for(var j=0;j<sa.length;j++){
+      var a=sa[j];
+      h+='<div class="set-row">';
+      h+='<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
+      h+='<div class="set-name">'+a.name+'</div>';
+      h+='<div class="set-meta">順'+a.sort_order+'</div>';
+      h+='<button class="ebtn" onclick="openEditAisle(\''+a.id+'\')">✏️</button>';
+      h+='<button class="dbtn" onclick="deleteAisle(\''+a.id+'\')">✕</button>';
+      h+='</div>';
+    }
+    h+='<div class="set-add" onclick="openAddAisle(\''+s.id+'\')">＋ 売り場を追加</div>';
+  }
+  h+='<div class="set-add" onclick="openOv(\'store-ov\')">＋ スーパーを追加</div>';
+  se.innerHTML=h;
 
-  // Build staple settings
-  let steHTML = '';
-  aisles.forEach(function(a){
-    const as = staples.filter(function(s){ return s.aisle_id===a.id; }).sort(function(x,y){ return (x.sort_order||0)-(y.sort_order||0); });
-    if(!as.length) return;
-    steHTML += '<div>';
-    steHTML += '<div class="set-grp-hdr" style="color:'+a.color+'">';
-    steHTML += '<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
-    steHTML += '</div>';
-    as.forEach(function(s){
-      steHTML += '<div class="set-item">';
-      steHTML += '<div class="set-item-name">'+s.name+'</div>';
-      steHTML += '<div class="set-item-meta">順'+(s.sort_order||'-')+'</div>';
-      steHTML += '<button class="e-btn" onclick="openEditStaple(''+s.id+'')">✏️</button>';
-      steHTML += '<button class="d-btn" onclick="deleteStaple(''+s.id+'')">✕</button>';
-      steHTML += '</div>';
-    });
-    steHTML += '</div>';
-  });
-  steHTML += '<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
-  ste.innerHTML = steHTML;
-}
-
-document.getElementById('settingsBtn').addEventListener('click',()=>{
-  document.getElementById('mainScreen').classList.add('hidden');
-  document.getElementById('settingsScreen').classList.add('active');
-  document.getElementById('hdrLeft').innerHTML='';
-  document.getElementById('settingsBtn').style.display='none';
-  renderSettings();
-});
-document.getElementById('backBtn').addEventListener('click',()=>{
-  document.getElementById('mainScreen').classList.remove('hidden');
-  document.getElementById('settingsScreen').classList.remove('active');
-  document.getElementById('hdrLeft').innerHTML='<div class="header-title">🛒 買い物リスト</div>';
-  document.getElementById('settingsBtn').style.display='';
-});
-
-init();
-</script>
-<style>
-:root {
-  --bg:#f5f4f0; --surface:#fff; --surface2:#f0efe9; --border:#e0ddd4;
-  --text:#1a1916; --text2:#6b6860; --text3:#9b9890;
-  --accent:#2d5a27; --accent-light:#e8f0e7;
-  --danger:#c0392b; --radius:12px; --radius-sm:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.header-title{font-size:17px;font-weight:700;}
-.icon-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
-.store-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:56px;z-index:99;}
-.store-tabs::-webkit-scrollbar{display:none;}
-.store-tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;}
-.store-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-badge{background:var(--surface2);color:var(--text2);font-size:11px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;}
-.store-tab.active .tab-badge{background:var(--accent-light);color:var(--accent);}
-.store-tab-add{padding:10px 8px;color:var(--text3);cursor:pointer;font-size:20px;flex-shrink:0;display:flex;align-items:center;}
-.main{padding:12px 16px 120px;max-width:600px;margin:0 auto;}
-.quick-add{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
-.quick-row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
-.q-input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--text);outline:none;}
-.q-input::placeholder{color:var(--text3);}
-.mic-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.mic-btn.rec{background:#fee;color:var(--danger);animation:pulse 1s infinite;}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.add-btn{padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit;}
-.quick-meta{display:flex;gap:8px;padding:0 12px 10px;}
-.q-select{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;}
-.staples-toggle{padding:9px 12px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
-.staples-body{border-top:1px solid var(--border);padding:10px 12px;display:none;}
-.staples-body.open{display:block;}
-.s-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.s-cat{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);}
-.s-cat.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.s-chips{display:flex;gap:6px;flex-wrap:wrap;}
-.s-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);}
-.s-chip:active{background:var(--accent-light);border-color:var(--accent);}
-.aisle-sec{margin-bottom:8px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface);}
-.aisle-hdr{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;}
-.a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.a-name{font-size:13px;font-weight:600;flex:1;}
-.a-cnt{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
-.a-chev{font-size:11px;color:var(--text3);transition:transform .2s;}
-.aisle-sec.collapsed .a-chev{transform:rotate(-90deg);}
-.aisle-sec.collapsed .aisle-body{display:none;}
-.prog-bar{height:3px;background:var(--border);}
-.prog-fill{height:100%;transition:width .4s;}
-.item-wrap{position:relative;overflow:hidden;border-top:1px solid var(--border);}
-.del-bg{position:absolute;right:0;top:0;bottom:0;width:88px;background:var(--danger);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;cursor:pointer;}
-.s-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);transition:transform .2s;position:relative;touch-action:pan-y;user-select:none;}
-.s-item.swiped{transform:translateX(-88px);}
-.s-item.faded{opacity:.45;}
-.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.chk.done{background:var(--accent);border-color:var(--accent);color:#fff;font-size:13px;}
-.iname-wrap{flex:1;min-width:0;}
-.iname{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.iname.done{text-decoration:line-through;color:var(--text3);}
-.qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.q-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.q-btn:active{background:var(--border);}
-.q-num{font-size:14px;font-family:'DM Mono',monospace;min-width:26px;text-align:center;cursor:pointer;padding:3px 0;border-bottom:1px dashed var(--border);}
-.empty{text-align:center;padding:48px 24px;color:var(--text3);}
-.empty-icon{font-size:40px;margin-bottom:12px;}
-.undo-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
-.undo-bar.show{opacity:1;pointer-events:all;}
-.undo-btn{color:#7dd87d;font-weight:700;cursor:pointer;border:none;background:transparent;font-size:13px;}
-.settings-screen{display:none;}
-.settings-screen.active{display:block;}
-.main-screen.hidden{display:none;}
-.set-sec{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
-.set-grp-hdr{padding:10px 14px;font-size:13px;font-weight:600;background:var(--surface2);display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);}
-.set-grp-hdr:first-child{border-top:none;}
-.set-item{display:flex;align-items:center;gap:8px;padding:13px 14px;border-top:1px solid var(--border);}
-.set-item-name{flex:1;font-size:14px;}
-.set-item-meta{font-size:12px;color:var(--text3);}
-.set-add{padding:13px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);cursor:pointer;color:var(--accent);font-size:13px;font-weight:500;}
-.e-btn{border:none;background:transparent;cursor:pointer;font-size:14px;padding:4px 6px;color:var(--text3);}
-.d-btn{border:none;background:transparent;cursor:pointer;font-size:15px;padding:4px 8px;color:var(--danger);font-weight:700;}
-.back-btn{font-size:13px;color:var(--accent);cursor:pointer;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px 20px 44px;transform:translateY(16px);transition:transform .2s;}
-.modal-overlay.open .modal{transform:translateY(0);}
-.m-title{font-size:16px;font-weight:700;margin-bottom:16px;}
-.m-field{margin-bottom:12px;}
-.m-label{font-size:12px;color:var(--text2);margin-bottom:5px;}
-.m-input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:var(--surface2);}
-.m-input:focus{border-color:var(--accent);}
-.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
-.c-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
-.c-swatch.sel{border-color:var(--text);}
-.m-actions{display:flex;gap:8px;margin-top:16px;}
-.m-btn{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--text);}
-.m-btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.qty-modal{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
-.qty-modal.open{opacity:1;pointer-events:all;}
-.qty-box{background:var(--surface);border-radius:var(--radius);padding:24px 20px;width:200px;text-align:center;}
-.qty-title{font-size:13px;color:var(--text2);margin-bottom:12px;}
-.qty-inp{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:24px;font-family:'DM Mono',monospace;text-align:center;outline:none;}
-.qty-inp:focus{border-color:var(--accent);}
-.qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
-</style>
-</head>
-<body>
-<div class="header">
-  <div id="hdrLeft"><div class="header-title">🛒 買い物リスト</div></div>
-  <button class="icon-btn" id="settingsBtn">⚙️</button>
-</div>
-
-<div class="main-screen" id="mainScreen">
-  <div class="store-tabs" id="storeTabs"></div>
-  <div class="main" id="mainContent"></div>
-</div>
-
-<div class="settings-screen" id="settingsScreen">
-  <div class="main" style="padding-top:16px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <div class="back-btn" id="backBtn">← 戻る</div>
-      <div style="font-size:16px;font-weight:700;">設定</div>
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:6px;padding-left:2px;">スーパー・売り場</div>
-    <div class="set-sec" id="storeSettings"></div>
-    <div style="font-size:12px;color:var(--text2);margin:16px 0 6px;padding-left:2px;">定番リスト</div>
-    <div class="set-sec" id="stapleSettings"></div>
-  </div>
-</div>
-
-<!-- Aisle modal -->
-<div class="modal-overlay" id="aisleModal">
-  <div class="modal">
-    <div class="m-title" id="aisleMTitle">売り場を追加</div>
-    <div class="m-field"><div class="m-label">売り場名</div><input class="m-input" id="aisleNameIn" placeholder="例：野菜・果物"></div>
-    <div class="m-field"><div class="m-label">色</div><div class="color-picker" id="colorPicker"></div></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="aisleSortIn" type="number" value="1"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('aisleModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveAisle()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- Store modal -->
-<div class="modal-overlay" id="storeModal">
-  <div class="modal">
-    <div class="m-title">スーパーを追加</div>
-    <div class="m-field"><div class="m-label">スーパー名</div><input class="m-input" id="storeNameIn" placeholder="例：業務スーパー"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('storeModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveStore()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- Staple modal -->
-<div class="modal-overlay" id="stapleModal">
-  <div class="modal">
-    <div class="m-title" id="stapleMTitle">定番アイテムを追加</div>
-    <div class="m-field"><div class="m-label">アイテム名</div><input class="m-input" id="stapleNameIn" placeholder="例：玉ねぎ"></div>
-    <div class="m-field"><div class="m-label">売り場</div><select class="m-input" id="stapleAisleIn"></select></div>
-    <div class="m-field"><div class="m-label">並び順（小さいほど上）</div><input class="m-input" id="stapleSortIn" type="number" value="1"></div>
-    <div class="m-actions">
-      <button class="m-btn" onclick="closeModal('stapleModal')">キャンセル</button>
-      <button class="m-btn m-btn-primary" onclick="saveStaple()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- Qty modal -->
-<div class="qty-modal" id="qtyModal">
-  <div class="qty-box">
-    <div class="qty-title" id="qtyName">数量を入力</div>
-    <input class="qty-inp" id="qtyIn" type="number" min="1" value="1">
-    <button class="qty-ok" onclick="saveQty()">OK</button>
-  </div>
-</div>
-
-<div class="undo-bar" id="undoBar">
-  <span id="undoMsg">削除しました</span>
-  <button class="undo-btn" onclick="undoDelete()">元に戻す</button>
-</div>
-
-<script>
-const SURL='https://pfobhvsslpxuiglfacss.supabase.co';
-const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmb2JodnNzbHB4dWlnbGZhY3NzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODg4NzIsImV4cCI6MjA5Mjg2NDg3Mn0.yyYgQnDrT2OTgKHsTtNPbNLesMUd_mGYlqZlU6mLZQE';
-const db=supabase.createClient(SURL,SKEY);
-const COLS=['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
-
-let stores=[],aisles=[],staples=[],items=[];
-let activeStore=null,editAisleId=null,editStapleId=null,aisleStore=null;
-let qtyItemId=null,staplesOpen=false,staplesCat=null;
-let isRec=false,recog=null,undoData=null,undoTimer=null;
-
-async function init(){
-  await loadAll();
-  db.channel('rt').on('postgres_changes',{event:'*',schema:'public'},async()=>{await loadAll();render();}).subscribe();
-  render();
-}
-
-async function loadAll(){
-  const [s,a,st,it]=await Promise.all([
-    db.from('stores').select('*'),
-    db.from('aisles').select('*').order('sort_order'),
-    db.from('staples').select('*').order('sort_order'),
-    db.from('shopping_items').select('*').order('created_at')
-  ]);
-  stores=s.data||[];aisles=a.data||[];staples=st.data||[];items=it.data||[];
-  if(!activeStore&&stores.length) activeStore=stores[0].id;
-}
-
-function render(){renderTabs();renderMain();if(document.getElementById('settingsScreen').classList.contains('active'))renderSettings();}
-
-function renderTabs(){
-  const el=document.getElementById('storeTabs');
-  el.innerHTML=stores.map(s=>{
-    const n=items.filter(i=>i.store_id===s.id&&!i.checked).length;
-    return `<div class="store-tab${s.id===activeStore?' active':''}" onclick="setStore('${s.id}')">${s.name}${n?`<span class="tab-badge">${n}</span>`:''}</div>`;
-  // (replaced)
-}
-
-function renderMain(){
-  const el=document.getElementById('mainContent');
-  if(!activeStore){el.innerHTML='<div class="empty"><div class="empty-icon">🏪</div><div>⚙️設定からスーパーを追加してください</div></div>';return;}
-  const sa=aisles.filter(a=>a.store_id===activeStore);
-  const si=items.filter(i=>i.store_id===activeStore);
-  const ss=staples.filter(s=>sa.find(a=>a.id===s.aisle_id));
-
-  let html=`<div class="quick-add">
-    <div class="quick-row">
-      <input class="q-input" id="qIn" placeholder="アイテムを追加..." onkeydown="if(event.key==='Enter')doAdd()">
-      <button class="mic-btn${isRec?' rec':''}" id="micB" onclick="toggleMic()">🎤</button>
-      <button class="add-btn" onclick="doAdd()">追加</button>
-    </div>
-    <div class="quick-meta">
-      <select class="q-select" id="qAisle">
-        <option value="">売り場（未分類）</option>
-        ${sa.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}
-      </select>
-    </div>
-    <div class="staples-toggle" onclick="toggleStaples()">
-      <span>📋 定番リストから追加</span><span>${staplesOpen?'▲':'▼'}</span>
-    </div>
-    <div class="staples-body${staplesOpen?' open':''}">
-      <div class="s-cats">
-        <div class="s-cat${staplesCat===null?' active':''}" onclick="setCat(null)">すべて</div>
-        ${sa.map(a=>`<div class="s-cat${staplesCat===a.id?' active':''}" onclick="setCat('${a.id}')" style="${staplesCat===a.id?`background:${a.color};border-color:${a.color};color:#fff`:`color:${a.color};border-color:${a.color}40`}">${a.name}</div>`).join('')}
-      </div>
-      <div class="s-chips">
-        ${(ss.filter(s=>staplesCat===null||s.aisle_id===staplesCat)).map(s=>`<div class="s-chip" onclick="addStaple('${s.id}')">${s.name}</div>`).join('')||'<span style="color:var(--text3);font-size:13px;">定番アイテムがありません</span>'}
-      </div>
-    </div>
-  </div>`;
-
-  if(!si.length){html+='<div class="empty"><div class="empty-icon">✅</div><div>リストは空です</div></div>';}
-  else{
-    sa.forEach(a=>{
-      const ai=si.filter(i=>i.aisle_id===a.id);
-      if(!ai.length)return;
-      const done=ai.filter(i=>i.checked).length;
-      html+=`<div class="aisle-sec" id="sec-${a.id}">
-        <div class="aisle-hdr" style="background:${a.color}12;" onclick="togAisle('${a.id}')">
-          <div class="a-dot" style="background:${a.color}"></div>
-          <div class="a-name">${a.name}</div>
-          <div class="a-cnt">${done}/${ai.length}</div>
-          <div class="a-chev">▾</div>
-        </div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${ai.length?done/ai.length*100:0}%;background:${a.color}50"></div></div>
-        <div class="aisle-body">${ai.map(renderItem).join('')}</div>
-      </div>`;
-    });
-    const na=si.filter(i=>!i.aisle_id);
-    if(na.length){
-      html+=`<div class="aisle-sec" id="sec-none">
-        <div class="aisle-hdr" style="background:#f0f0f0;" onclick="togAisle('none')">
-          <div class="a-dot" style="background:#999"></div>
-          <div class="a-name">未分類</div>
-          <div class="a-cnt">${na.length}</div>
-          <div class="a-chev">▾</div>
-        </div>
-        <div class="aisle-body">${na.map(renderItem).join('')}</div>
-      </div>`;
+  h='';
+  for(var i=0;i<aisles.length;i++){
+    var a=aisles[i];
+    var as=staples.filter(function(s){return s.aisle_id===a.id;}).sort(function(x,y){return (x.sort_order||0)-(y.sort_order||0);});
+    if(!as.length) continue;
+    h+='<div class="set-grp" style="color:'+a.color+'">';
+    h+='<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
+    h+='</div>';
+    for(var j=0;j<as.length;j++){
+      var s=as[j];
+      h+='<div class="set-row"><div class="set-name">'+s.name+'</div><div class="set-meta">順'+(s.sort_order||'-')+'</div>';
+      h+='<button class="ebtn" onclick="openEditStaple(\''+s.id+'\')">✏️</button>';
+      h+='<button class="dbtn" onclick="deleteStaple(\''+s.id+'\')">✕</button></div>';
     }
   }
-  el.innerHTML=html;
-  attachSwipe();
+  h+='<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
+  ste.innerHTML=h;
 }
 
-function renderItem(it){
-  return `<div class="item-wrap" id="w-${it.id}">
-    <div class="del-bg" onclick="swipeDel('${it.id}')">削除</div>
-    <div class="s-item${it.checked?' faded':''}" id="i-${it.id}">
-      <div class="chk${it.checked?' done':''}" onclick="togChk('${it.id}')">${it.checked?'✓':''}</div>
-      <div class="iname-wrap"><div class="iname${it.checked?' done':''}">${it.name}</div></div>
-      <div class="qty-ctrl">
-        <button class="q-btn" onclick="chgQty('${it.id}',-1)">−</button>
-        <div class="q-num" onclick="openQty('${it.id}','${it.name.replace(/'/g,"\\'")}',${it.quantity})">${it.quantity}</div>
-        <button class="q-btn" onclick="chgQty('${it.id}',1)">＋</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function attachSwipe(){
-  document.querySelectorAll('.s-item').forEach(el=>{
-    let sx=0,sy=0,dx=0,was=false;
-    el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;was=el.classList.contains('swiped');},{passive:true});
-    el.addEventListener('touchmove',e=>{
-      dx=e.touches[0].clientX-sx;
-      if(Math.abs(e.touches[0].clientY-sy)>Math.abs(dx))return;
-      const mv=was?Math.min(0,Math.max(-88,-88+dx)):Math.max(-88,Math.min(0,dx));
-      el.style.transition='none';
-      el.style.transform=`translateX(${mv}px)`;
-    },{passive:true});
-    el.addEventListener('touchend',()=>{
-      el.style.transition='transform .2s';
-      if(!was&&dx<-44){el.style.transform='translateX(-88px)';el.classList.add('swiped');}
-      else if(was&&dx>44){el.style.transform='translateX(0)';el.classList.remove('swiped');}
-      else{el.style.transform=was?'translateX(-88px)':'translateX(0)';}
-    });
-  });
-}
-
-async function swipeDel(id){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  undoData={...it};
-  await db.from('shopping_items').delete().eq('id',id);
-  if(undoTimer)clearTimeout(undoTimer);
-  document.getElementById('undoMsg').textContent=`「${it.name}」を削除`;
-  document.getElementById('undoBar').classList.add('show');
-  undoTimer=setTimeout(()=>{document.getElementById('undoBar').classList.remove('show');undoData=null;},4000);
-}
-async function undoDelete(){
-  if(!undoData)return;
-  const{id,...r}=undoData;
-  await db.from('shopping_items').insert(r);
-  document.getElementById('undoBar').classList.remove('show');
-  undoData=null;if(undoTimer)clearTimeout(undoTimer);
-}
-
-function setStore(id){activeStore=id;render();}
-
-async function doAdd(){
-  const inp=document.getElementById('qIn');
-  const name=inp.value.trim();
-  if(!name||!activeStore)return;
-  const aid=document.getElementById('qAisle').value||null;
-  await db.from('shopping_items').insert({store_id:activeStore,aisle_id:aid,name,quantity:1,checked:false});
-  if(aid){
-    const already=staples.find(s=>s.name===name&&s.aisle_id===aid);
-    if(!already){
-      const mx=Math.max(0,...staples.filter(s=>s.aisle_id===aid).map(s=>s.sort_order||0));
-      await db.from('staples').insert({aisle_id:aid,name,sort_order:mx+1});
-    }
-  }
-  inp.value='';
-  await loadAll();render();
-}
-
-async function addStaple(sid){
-  const s=staples.find(x=>x.id===sid);if(!s||!activeStore)return;
-  const ex=items.find(i=>i.store_id===activeStore&&i.name===s.name&&!i.checked);
-  if(ex)await db.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
-  else await db.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:1,checked:false});
-}
-
-async function togChk(id){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  await db.from('shopping_items').update({checked:!it.checked}).eq('id',id);
-}
-async function chgQty(id,d){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  await db.from('shopping_items').update({quantity:Math.max(1,it.quantity+d)}).eq('id',id);
-}
-function openQty(id,name,qty){
-  qtyItemId=id;
-  document.getElementById('qtyName').textContent=name;
-  document.getElementById('qtyIn').value=qty;
-  document.getElementById('qtyModal').classList.add('open');
-  setTimeout(()=>document.getElementById('qtyIn').select(),100);
-}
-async function saveQty(){
-  const q=parseInt(document.getElementById('qtyIn').value)||1;
-  if(qtyItemId)await db.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
-  document.getElementById('qtyModal').classList.remove('open');qtyItemId=null;
-}
-document.getElementById('qtyModal').addEventListener('click',e=>{if(e.target===document.getElementById('qtyModal'))document.getElementById('qtyModal').classList.remove('open');});
-document.getElementById('qtyIn').addEventListener('keydown',e=>{if(e.key==='Enter')saveQty();});
-
-function toggleStaples(){staplesOpen=!staplesOpen;renderMain();}
-function setCat(id){staplesCat=id;renderMain();}
-function togAisle(id){const el=document.getElementById(`sec-${id}`);if(el)el.classList.toggle('collapsed');}
-
-function toggleMic(){
-  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){alert('このブラウザは音声入力に対応していません');return;}
-  if(isRec){recog.stop();return;}
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  recog=new SR();recog.lang='ja-JP';
-  recog.onresult=e=>{document.getElementById('qIn').value=e.results[0][0].transcript;};
-  recog.onend=()=>{isRec=false;document.getElementById('micB').classList.remove('rec');};
-  recog.start();isRec=true;document.getElementById('micB').classList.add('rec');
-}
-
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');editAisleId=null;editStapleId=null;}
-document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
-
-function openAddAisle(sid){
-  aisleStore=sid;editAisleId=null;
-  document.getElementById('aisleMTitle').textContent='売り場を追加';
-  document.getElementById('aisleNameIn').value='';
-  document.getElementById('aisleSortIn').value=aisles.filter(a=>a.store_id===sid).length+1;
-  renderCP(COLS[0]);openModal('aisleModal');
-}
-function openEditAisle(id){
-  const a=aisles.find(x=>x.id===id);if(!a)return;
-  editAisleId=id;aisleStore=a.store_id;
-  document.getElementById('aisleMTitle').textContent='売り場を編集';
-  document.getElementById('aisleNameIn').value=a.name;
-  document.getElementById('aisleSortIn').value=a.sort_order;
-  renderCP(a.color);openModal('aisleModal');
-}
-function renderCP(sel){
-  document.getElementById('colorPicker').innerHTML=COLS.map(c=>`<div class="c-swatch${c===sel?' sel':''}" style="background:${c}" onclick="selCol('${c}')"></div>`).join('');
-}
-function selCol(c){renderCP(c);}
-async function saveAisle(){
-  const name=document.getElementById('aisleNameIn').value.trim();
-  const sort=parseInt(document.getElementById('aisleSortIn').value)||1;
-  const color=document.querySelector('.c-swatch.sel')?.style.backgroundColor||COLS[0];
-  if(!name)return;
-  if(editAisleId)await db.from('aisles').update({name,color,sort_order:sort}).eq('id',editAisleId);
-  else await db.from('aisles').insert({store_id:aisleStore,name,color,sort_order:sort});
-  closeModal('aisleModal');await loadAll();render();
-}
-async function deleteAisle(id){
-  if(!confirm('この売り場を削除しますか？'))return;
-  await db.from('staples').delete().eq('aisle_id',id);
-  await db.from('shopping_items').update({aisle_id:null}).eq('aisle_id',id);
-  await db.from('aisles').delete().eq('id',id);
-  await loadAll();render();
-}
-
-async function saveStore(){
-  const name=document.getElementById('storeNameIn').value.trim();if(!name)return;
-  const r=await db.from('stores').insert({name}).select().single();
-  if(r.data)activeStore=r.data.id;
-  closeModal('storeModal');document.getElementById('storeNameIn').value='';
-  await loadAll();render();
-}
-async function deleteStore(id){
-  if(!confirm('このスーパーを削除しますか？'))return;
-  await db.from('shopping_items').delete().eq('store_id',id);
-  const sa=aisles.filter(a=>a.store_id===id);
-  for(const a of sa)await db.from('staples').delete().eq('aisle_id',a.id);
-  await db.from('aisles').delete().eq('store_id',id);
-  await db.from('stores').delete().eq('id',id);
-  if(activeStore===id)activeStore=null;
-  await loadAll();if(!activeStore&&stores.length)activeStore=stores[0].id;render();
-}
-
-function openAddStaple(){
-  editStapleId=null;
-  document.getElementById('stapleMTitle').textContent='定番アイテムを追加';
-  document.getElementById('stapleNameIn').value='';
-  document.getElementById('stapleAisleIn').innerHTML=aisles.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-  document.getElementById('stapleSortIn').value=1;
-  openModal('stapleModal');
-}
-function openEditStaple(id){
-  const s=staples.find(x=>x.id===id);if(!s)return;
-  editStapleId=id;
-  document.getElementById('stapleMTitle').textContent='定番アイテムを編集';
-  document.getElementById('stapleNameIn').value=s.name;
-  document.getElementById('stapleAisleIn').innerHTML=aisles.map(a=>`<option value="${a.id}"${a.id===s.aisle_id?' selected':''}>${a.name}</option>`).join('');
-  document.getElementById('stapleSortIn').value=s.sort_order||1;
-  openModal('stapleModal');
-}
-async function saveStaple(){
-  const name=document.getElementById('stapleNameIn').value.trim();
-  const aid=document.getElementById('stapleAisleIn').value;
-  const sort=parseInt(document.getElementById('stapleSortIn').value)||1;
-  if(!name||!aid)return;
-  if(editStapleId)await db.from('staples').update({name,aisle_id:aid,sort_order:sort}).eq('id',editStapleId);
-  else await db.from('staples').insert({aisle_id:aid,name,sort_order:sort});
-  closeModal('stapleModal');await loadAll();render();
-}
-async function deleteStaple(id){
-  if(!confirm('この定番アイテムを削除しますか？'))return;
-  await db.from('staples').delete().eq('id',id);
-  await loadAll();render();
-}
-
-function renderSettings(){
-  const se=document.getElementById('storeSettings');
-  const ste=document.getElementById('stapleSettings');
-  // Build store settings
-  let seHTML = '';
-  stores.forEach(function(s){
-    const sa = aisles.filter(function(a){ return a.store_id===s.id; });
-    seHTML += '<div>';
-    seHTML += '<div class="set-grp-hdr"><span style="flex:1">'+s.name+'</span><button class="d-btn" onclick="deleteStore(''+s.id+'')">削除</button></div>';
-    sa.forEach(function(a){
-      seHTML += '<div class="set-item">';
-      seHTML += '<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
-      seHTML += '<div class="set-item-name">'+a.name+'</div>';
-      seHTML += '<div class="set-item-meta">順'+a.sort_order+'</div>';
-      seHTML += '<button class="e-btn" onclick="openEditAisle(''+a.id+'')">✏️</button>';
-      seHTML += '<button class="d-btn" onclick="deleteAisle(''+a.id+'')">✕</button>';
-      seHTML += '</div>';
-    });
-    seHTML += '<div class="set-add" onclick="openAddAisle(''+s.id+'')">＋ 売り場を追加</div>';
-    seHTML += '</div>';
-  });
-  seHTML += '<div class="set-add" onclick="openModal('storeModal')">＋ スーパーを追加</div>';
-  se.innerHTML = seHTML;
-
-  // Build staple settings
-  let steHTML = '';
-  aisles.forEach(function(a){
-    const as = staples.filter(function(s){ return s.aisle_id===a.id; }).sort(function(x,y){ return (x.sort_order||0)-(y.sort_order||0); });
-    if(!as.length) return;
-    steHTML += '<div>';
-    steHTML += '<div class="set-grp-hdr" style="color:'+a.color+'">';
-    steHTML += '<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
-    steHTML += '</div>';
-    as.forEach(function(s){
-      steHTML += '<div class="set-item">';
-      steHTML += '<div class="set-item-name">'+s.name+'</div>';
-      steHTML += '<div class="set-item-meta">順'+(s.sort_order||'-')+'</div>';
-      steHTML += '<button class="e-btn" onclick="openEditStaple(''+s.id+'')">✏️</button>';
-      steHTML += '<button class="d-btn" onclick="deleteStaple(''+s.id+'')">✕</button>';
-      steHTML += '</div>';
-    });
-    steHTML += '</div>';
-  });
-  steHTML += '<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
-  ste.innerHTML = steHTML;
-}
-
-document.getElementById('settingsBtn').addEventListener('click',()=>{
-  document.getElementById('mainScreen').classList.add('hidden');
-  document.getElementById('settingsScreen').classList.add('active');
-  document.getElementById('hdrLeft').innerHTML='';
-  document.getElementById('settingsBtn').style.display='none';
-  renderSettings();
+document.getElementById('settings-btn').addEventListener('click',function(){
+  document.getElementById('main-wrap').classList.add('hide');
+  document.getElementById('settings').classList.add('show');
+  document.getElementById('hdr-left').innerHTML='';
+  document.getElementById('settings-btn').style.display='none';
+  drawSettings();
 });
-document.getElementById('backBtn').addEventListener('click',()=>{
-  document.getElementById('mainScreen').classList.remove('hidden');
-  document.getElementById('settingsScreen').classList.remove('active');
-  document.getElementById('hdrLeft').innerHTML='<div class="header-title">🛒 買い物リスト</div>';
-  document.getElementById('settingsBtn').style.display='';
+document.getElementById('back-btn').addEventListener('click',function(){
+  document.getElementById('main-wrap').classList.remove('hide');
+  document.getElementById('settings').classList.remove('show');
+  document.getElementById('hdr-left').innerHTML='<span id="hdr-title">🛒 買い物リスト</span>';
+  document.getElementById('settings-btn').style.display='';
 });
 
-init();
+boot();
 </script>
 </body>
 </html>
