@@ -331,18 +331,23 @@ function drawMain() {
 }
 
 function itemHTML(it) {
-  var h = '<div class="iw" id="iw-'+it.id+'">';
+  var dc = it.checked ? ' done' : '';
+  var fc = it.checked ? ' faded' : '';
+  var id = it.id;
+  var nm = it.name;
+  var qty = it.quantity;
+  var h = '<div class="iw" id="iw-' + id + '">';
   if (!it.checked) {
-    h += '<div class="del-bg" onclick="delItem(\''+it.id+'\')">削除</div>';
+    h += '<div class="del-bg" onclick="delItem(\''+ id +'\')">削除</div>';
   }
-  h += '<div class="si'+(it.checked?' faded':'')+'" id="si-'+it.id+'">';
-  h += '<div class="chk'+(it.checked?' done':'')+'" onclick="togChk(\''+it.id+'\')">'+( it.checked?'✓':'' )+'</div>';
-  h += '<div class="iname'+(it.checked?' done':'\'")>'+it.name+'</div>';
+  h += '<div class="si' + fc + '" id="si-' + id + '">' ;
+  h += '<div class="chk' + dc + '" onclick="togChk(\''+ id +'\')">' + (it.checked ? '✓' : '') + '</div>';
+  h += '<div class="iname' + dc + '">' + nm + '</div>';
   if (!it.checked) {
     h += '<div class="qty-c">';
-    h += '<button class="qbtn" onclick="chgQty(\''+it.id+'\',-1)">−</button>';
-    h += '<div class="qnum" onclick="openQty(\''+it.id+'\',\''+it.name.replace(/'/g,'&#39;')+'\','+it.quantity+')">'+it.quantity+'</div>';
-    h += '<button class="qbtn" onclick="chgQty(\''+it.id+'\',1)">＋</button>';
+    h += '<button class="qbtn" onclick="chgQty(\''+ id +'\',-1)">−</button>';
+    h += '<div class="qnum" onclick="openQty(\''+ id +'\',\''+ nm.replace(/'/g,'&#39;') +'\','+ qty +')">' + qty + '</div>';
+    h += '<button class="qbtn" onclick="chgQty(\''+ id +'\',1)">＋</button>';
     h += '</div>';
   }
   h += '</div></div>';
