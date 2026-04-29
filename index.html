@@ -236,10 +236,15 @@ function render(){renderTabs();renderMain();if(document.getElementById('settings
 
 function renderTabs(){
   const el=document.getElementById('storeTabs');
-  el.innerHTML=stores.map(s=>{
+  let html='';
+  stores.forEach(s=>{
     const n=items.filter(i=>i.store_id===s.id&&!i.checked).length;
-    return `<div class="store-tab${s.id===activeStore?' active':''}" onclick="setStore('${s.id}')">${s.name}${n?`<span class="tab-badge">${n}</span>`:''}</div>`;
-  }).join('')+'<div class="store-tab-add" onclick="openModal('storeModal')">＋</div>';
+    const badge=n?'<span class="tab-badge">'+n+'</span>':'';
+    const active=s.id===activeStore?' active':'';
+    html+='<div class="store-tab'+active+'" onclick="setStore(''+s.id+'')">'+s.name+badge+'</div>';
+  });
+  html+='<div class="store-tab-add" onclick="openModal('storeModal')">＋</div>';
+  el.innerHTML=html;
 }
 
 function renderMain(){
@@ -603,36 +608,48 @@ function renderSettings(){
   const se=document.getElementById('storeSettings');
   const ste=document.getElementById('stapleSettings');
   if(!se||!ste)return;
-  se.innerHTML=stores.map(s=>{
-    const sa=aisles.filter(a=>a.store_id===s.id);
-    return `<div>
-      <div class="set-grp-hdr"><span style="flex:1">${s.name}</span><button class="d-btn" onclick="deleteStore('${s.id}')">削除</button></div>
-      ${sa.map(a=>`<div class="set-item">
-        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
-        <div class="set-item-name">${a.name}</div>
-        <div class="set-item-meta">順${a.sort_order}</div>
-        <button class="e-btn" onclick="openEditAisle('${a.id}')">✏️</button>
-        <button class="d-btn" onclick="deleteAisle('${a.id}')">✕</button>
-      </div>`).join('')}
-      <div class="set-add" onclick="openAddAisle('${s.id}')">＋ 売り場を追加</div>
-    </div>`;
-  }).join('')+'<div class="set-add" onclick="openModal('storeModal')">＋ スーパーを追加</div>';
+  // Build store settings
+  let seHTML = '';
+  stores.forEach(function(s){
+    const sa = aisles.filter(function(a){ return a.store_id===s.id; });
+    seHTML += '<div>';
+    seHTML += '<div class="set-grp-hdr"><span style="flex:1">'+s.name+'</span><button class="d-btn" onclick="deleteStore(''+s.id+'')">削除</button></div>';
+    sa.forEach(function(a){
+      seHTML += '<div class="set-item">';
+      seHTML += '<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
+      seHTML += '<div class="set-item-name">'+a.name+'</div>';
+      seHTML += '<div class="set-item-meta">順'+a.sort_order+'</div>';
+      seHTML += '<button class="e-btn" onclick="openEditAisle(''+a.id+'')">✏️</button>';
+      seHTML += '<button class="d-btn" onclick="deleteAisle(''+a.id+'')">✕</button>';
+      seHTML += '</div>';
+    });
+    seHTML += '<div class="set-add" onclick="openAddAisle(''+s.id+'')">＋ 売り場を追加</div>';
+    seHTML += '</div>';
+  });
+  seHTML += '<div class="set-add" onclick="openModal('storeModal')">＋ スーパーを追加</div>';
+  se.innerHTML = seHTML;
 
-  ste.innerHTML=aisles.map(a=>{
-    const as=staples.filter(s=>s.aisle_id===a.id).sort((x,y)=>(x.sort_order||0)-(y.sort_order||0));
-    if(!as.length)return '';
-    return `<div>
-      <div class="set-grp-hdr" style="color:${a.color}">
-        <div style="width:8px;height:8px;border-radius:50%;background:${a.color};margin-right:6px;flex-shrink:0"></div>${a.name}
-      </div>
-      ${as.map(s=>`<div class="set-item">
-        <div class="set-item-name">${s.name}</div>
-        <div class="set-item-meta">順${s.sort_order||'-'}</div>
-        <button class="e-btn" onclick="openEditStaple('${s.id}')">✏️</button>
-        <button class="d-btn" onclick="deleteStaple('${s.id}')">✕</button>
-      </div>`).join('')}
-    </div>`;
-  }).join('')+'<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
+  // Build staple settings
+  let steHTML = '';
+  aisles.forEach(function(a){
+    const as = staples.filter(function(s){ return s.aisle_id===a.id; }).sort(function(x,y){ return (x.sort_order||0)-(y.sort_order||0); });
+    if(!as.length) return;
+    steHTML += '<div>';
+    steHTML += '<div class="set-grp-hdr" style="color:'+a.color+'">';
+    steHTML += '<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
+    steHTML += '</div>';
+    as.forEach(function(s){
+      steHTML += '<div class="set-item">';
+      steHTML += '<div class="set-item-name">'+s.name+'</div>';
+      steHTML += '<div class="set-item-meta">順'+(s.sort_order||'-')+'</div>';
+      steHTML += '<button class="e-btn" onclick="openEditStaple(''+s.id+'')">✏️</button>';
+      steHTML += '<button class="d-btn" onclick="deleteStaple(''+s.id+'')">✕</button>';
+      steHTML += '</div>';
+    });
+    steHTML += '</div>';
+  });
+  steHTML += '<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
+  ste.innerHTML = steHTML;
 }
 
 document.getElementById('settingsBtn').addEventListener('click',()=>{
@@ -869,7 +886,7 @@ function renderTabs(){
   el.innerHTML=stores.map(s=>{
     const n=items.filter(i=>i.store_id===s.id&&!i.checked).length;
     return `<div class="store-tab${s.id===activeStore?' active':''}" onclick="setStore('${s.id}')">${s.name}${n?`<span class="tab-badge">${n}</span>`:''}</div>`;
-  }).join('')+'<div class="store-tab-add" onclick="openModal(\'storeModal\')">＋</div>';
+  // (replaced)
 }
 
 function renderMain(){
@@ -1147,36 +1164,48 @@ async function deleteStaple(id){
 function renderSettings(){
   const se=document.getElementById('storeSettings');
   const ste=document.getElementById('stapleSettings');
-  se.innerHTML=stores.map(s=>{
-    const sa=aisles.filter(a=>a.store_id===s.id);
-    return `<div>
-      <div class="set-grp-hdr"><span style="flex:1">${s.name}</span><button class="d-btn" onclick="deleteStore('${s.id}')">削除</button></div>
-      ${sa.map(a=>`<div class="set-item">
-        <div style="width:10px;height:10px;border-radius:50%;background:${a.color};flex-shrink:0"></div>
-        <div class="set-item-name">${a.name}</div>
-        <div class="set-item-meta">順${a.sort_order}</div>
-        <button class="e-btn" onclick="openEditAisle('${a.id}')">✏️</button>
-        <button class="d-btn" onclick="deleteAisle('${a.id}')">✕</button>
-      </div>`).join('')}
-      <div class="set-add" onclick="openAddAisle('${s.id}')">＋ 売り場を追加</div>
-    </div>`;
-  }).join('')+'<div class="set-add" onclick="openModal(\'storeModal\')">＋ スーパーを追加</div>';
+  // Build store settings
+  let seHTML = '';
+  stores.forEach(function(s){
+    const sa = aisles.filter(function(a){ return a.store_id===s.id; });
+    seHTML += '<div>';
+    seHTML += '<div class="set-grp-hdr"><span style="flex:1">'+s.name+'</span><button class="d-btn" onclick="deleteStore(''+s.id+'')">削除</button></div>';
+    sa.forEach(function(a){
+      seHTML += '<div class="set-item">';
+      seHTML += '<div style="width:10px;height:10px;border-radius:50%;background:'+a.color+';flex-shrink:0"></div>';
+      seHTML += '<div class="set-item-name">'+a.name+'</div>';
+      seHTML += '<div class="set-item-meta">順'+a.sort_order+'</div>';
+      seHTML += '<button class="e-btn" onclick="openEditAisle(''+a.id+'')">✏️</button>';
+      seHTML += '<button class="d-btn" onclick="deleteAisle(''+a.id+'')">✕</button>';
+      seHTML += '</div>';
+    });
+    seHTML += '<div class="set-add" onclick="openAddAisle(''+s.id+'')">＋ 売り場を追加</div>';
+    seHTML += '</div>';
+  });
+  seHTML += '<div class="set-add" onclick="openModal('storeModal')">＋ スーパーを追加</div>';
+  se.innerHTML = seHTML;
 
-  ste.innerHTML=aisles.map(a=>{
-    const as=staples.filter(s=>s.aisle_id===a.id).sort((x,y)=>(x.sort_order||0)-(y.sort_order||0));
-    if(!as.length)return '';
-    return `<div>
-      <div class="set-grp-hdr" style="color:${a.color}">
-        <div style="width:8px;height:8px;border-radius:50%;background:${a.color};margin-right:6px;flex-shrink:0"></div>${a.name}
-      </div>
-      ${as.map(s=>`<div class="set-item">
-        <div class="set-item-name">${s.name}</div>
-        <div class="set-item-meta">順${s.sort_order||'-'}</div>
-        <button class="e-btn" onclick="openEditStaple('${s.id}')">✏️</button>
-        <button class="d-btn" onclick="deleteStaple('${s.id}')">✕</button>
-      </div>`).join('')}
-    </div>`;
-  }).join('')+'<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
+  // Build staple settings
+  let steHTML = '';
+  aisles.forEach(function(a){
+    const as = staples.filter(function(s){ return s.aisle_id===a.id; }).sort(function(x,y){ return (x.sort_order||0)-(y.sort_order||0); });
+    if(!as.length) return;
+    steHTML += '<div>';
+    steHTML += '<div class="set-grp-hdr" style="color:'+a.color+'">';
+    steHTML += '<div style="width:8px;height:8px;border-radius:50%;background:'+a.color+';margin-right:6px;flex-shrink:0"></div>'+a.name;
+    steHTML += '</div>';
+    as.forEach(function(s){
+      steHTML += '<div class="set-item">';
+      steHTML += '<div class="set-item-name">'+s.name+'</div>';
+      steHTML += '<div class="set-item-meta">順'+(s.sort_order||'-')+'</div>';
+      steHTML += '<button class="e-btn" onclick="openEditStaple(''+s.id+'')">✏️</button>';
+      steHTML += '<button class="d-btn" onclick="deleteStaple(''+s.id+'')">✕</button>';
+      steHTML += '</div>';
+    });
+    steHTML += '</div>';
+  });
+  steHTML += '<div class="set-add" onclick="openAddStaple()">＋ 定番アイテムを追加</div>';
+  ste.innerHTML = steHTML;
 }
 
 document.getElementById('settingsBtn').addEventListener('click',()=>{
