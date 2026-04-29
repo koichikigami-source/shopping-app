@@ -635,111 +635,95 @@ async function deleteStaple(id){
 // ===== DRAG & DROP for settings =====
 var dragSrcId=null, dragSrcType=null;
 
+// PC drag
 function onDragStart(e, id, type) {
   dragSrcId=id; dragSrcType=type;
   e.dataTransfer.effectAllowed='move';
-  setTimeout(function(){ var el=document.getElementById('dr-'+type+'-'+id); if(el) el.classList.add('dragging'); },0);
+  e.dataTransfer.setData('text/plain', id);
 }
 function onDragOver(e, id, type) {
   e.preventDefault(); e.dataTransfer.dropEffect='move';
   document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over'); });
   var el=document.getElementById('dr-'+type+'-'+id);
-  if(el&&id!==dragSrcId) el.classList.add('drag-over');
+  if(el && id!==dragSrcId) el.classList.add('drag-over');
 }
 function onDragLeave(id, type) {
   var el=document.getElementById('dr-'+type+'-'+id);
   if(el) el.classList.remove('drag-over');
 }
 async function onDrop(e, id, type) {
-  e.preventDefault();
-  if(!dragSrcId||dragSrcId===id||dragSrcType!==type) return;
+  if(e.preventDefault) e.preventDefault();
+  if(!dragSrcId || dragSrcId===id || dragSrcType!==type) return;
   document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over','dragging'); });
-
-  if(type==='store'){
-    var arr=stores.slice();
-    var fromIdx=-1,toIdx=-1;
-    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
-    if(fromIdx<0||toIdx<0) return;
-    var moved=arr.splice(fromIdx,1)[0];
-    arr.splice(toIdx,0,moved);
-    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
-    stores=arr;
-    pause(3000);
-    for(var i=0;i<arr.length;i++) await SB.from('stores').update({sort_order:i+1}).eq('id',arr[i].id);
-  } else if(type==='aisle'){
-    var arr=aisles.slice();
-    var fromIdx=-1,toIdx=-1;
-    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
-    if(fromIdx<0||toIdx<0) return;
-    var moved=arr.splice(fromIdx,1)[0];
-    arr.splice(toIdx,0,moved);
-    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
-    aisles=arr;
-    pause(3000);
-    for(var i=0;i<arr.length;i++) await SB.from('aisles').update({sort_order:i+1}).eq('id',arr[i].id);
-  } else if(type==='staple'){
-    var arr=staples.slice();
-    var fromIdx=-1,toIdx=-1;
-    for(var i=0;i<arr.length;i++){if(arr[i].id===dragSrcId)fromIdx=i;if(arr[i].id===id)toIdx=i;}
-    if(fromIdx<0||toIdx<0) return;
-    var moved=arr.splice(fromIdx,1)[0];
-    arr.splice(toIdx,0,moved);
-    for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
-    staples=arr;
-    pause(3000);
-    for(var i=0;i<arr.length;i++) await SB.from('staples').update({sort_order:i+1}).eq('id',arr[i].id);
-  }
+  await reorder(dragSrcId, id, type);
   dragSrcId=null;
-  drawSettings();
 }
 function onDragEnd(id,type){
   document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('dragging','drag-over');});
 }
 
+async function reorder(fromId, toId, type) {
+  var arr = type==='store' ? stores : type==='aisle' ? aisles : staples;
+  var fromIdx=-1, toIdx=-1;
+  for(var i=0;i<arr.length;i++){
+    if(arr[i].id===fromId) fromIdx=i;
+    if(arr[i].id===toId) toIdx=i;
+  }
+  if(fromIdx<0||toIdx<0) return;
+  var moved = arr.splice(fromIdx,1)[0];
+  arr.splice(toIdx,0,moved);
+  for(var i=0;i<arr.length;i++) arr[i].sort_order=i+1;
+  // Update immediately in UI
+  drawSettings();
+  // Then save to DB (all at once using Promise.all for speed)
+  pause(3000);
+  var tbl = type==='store' ? 'stores' : type==='aisle' ? 'aisles' : 'staples';
+  var updates = arr.map(function(item,i){ return SB.from(tbl).update({sort_order:i+1}).eq('id',item.id); });
+  await Promise.all(updates);
+}
+
 // Touch drag for mobile
-var touchDragId=null, touchDragType=null, touchDragEl=null, touchDragClone=null;
+var TD = { id:null, type:null, el:null, clone:null, overEl:null };
+
 function onTouchDragStart(e, id, type) {
-  touchDragId=id; touchDragType=type;
-  touchDragEl=document.getElementById('dr-'+type+'-'+id);
-  touchDragEl.classList.add('dragging');
-  touchDragClone=touchDragEl.cloneNode(true);
-  touchDragClone.style.position='fixed';
-  touchDragClone.style.opacity='0.8';
-  touchDragClone.style.pointerEvents='none';
-  touchDragClone.style.width=touchDragEl.offsetWidth+'px';
-  touchDragClone.style.zIndex='999';
-  touchDragClone.style.background='var(--w)';
-  touchDragClone.style.boxShadow='0 4px 20px rgba(0,0,0,.2)';
-  document.body.appendChild(touchDragClone);
-  moveTouchClone(e.touches[0]);
+  e.stopPropagation();
+  TD.id=id; TD.type=type;
+  TD.el=document.getElementById('dr-'+type+'-'+id);
+  TD.el.classList.add('dragging');
+  // Create floating clone
+  TD.clone=TD.el.cloneNode(true);
+  var rect=TD.el.getBoundingClientRect();
+  TD.clone.style.cssText='position:fixed;left:'+rect.left+'px;top:'+rect.top+'px;width:'+rect.width+'px;opacity:0.85;pointer-events:none;z-index:999;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.2);border-radius:8px;';
+  document.body.appendChild(TD.clone);
 }
-function moveTouchClone(t){ if(touchDragClone){touchDragClone.style.top=(t.clientY-30)+'px';touchDragClone.style.left='16px';} }
-function onTouchDragMove(e,id,type){
+function onTouchDragMove(e, id, type) {
+  if(!TD.clone) return;
   e.preventDefault();
-  moveTouchClone(e.touches[0]);
-  // find element under finger
   var t=e.touches[0];
-  var els=document.querySelectorAll('.set-row');
-  document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('drag-over');});
-  for(var i=0;i<els.length;i++){
-    var rect=els[i].getBoundingClientRect();
-    if(t.clientY>=rect.top&&t.clientY<=rect.bottom){
-      var eid=els[i].id.replace('dr-'+type+'-','');
-      if(eid&&eid!==touchDragId) els[i].classList.add('drag-over');
-      break;
-    }
+  TD.clone.style.top=(t.clientY-24)+'px';
+  // Find row under finger
+  TD.clone.style.display='none';
+  var under=document.elementFromPoint(t.clientX, t.clientY);
+  TD.clone.style.display='';
+  document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over'); });
+  if(under) {
+    var row=under.closest('.set-row');
+    if(row && row.id && row.id!=='dr-'+type+'-'+id) {
+      TD.overEl=row;
+      row.classList.add('drag-over');
+    } else { TD.overEl=null; }
   }
 }
-function onTouchDragEnd(e,id,type){
-  if(touchDragClone){touchDragClone.remove();touchDragClone=null;}
-  if(touchDragEl){touchDragEl.classList.remove('dragging');touchDragEl=null;}
-  var overEl=document.querySelector('.set-row.drag-over');
-  if(overEl){
-    var targetId=overEl.id.replace('dr-'+type+'-','');
-    document.querySelectorAll('.set-row').forEach(function(r){r.classList.remove('drag-over');});
-    onDrop({preventDefault:function(){}},targetId,type);
+function onTouchDragEnd(e, id, type) {
+  if(TD.clone){TD.clone.remove();TD.clone=null;}
+  if(TD.el){TD.el.classList.remove('dragging');TD.el=null;}
+  document.querySelectorAll('.set-row').forEach(function(r){ r.classList.remove('drag-over'); });
+  if(TD.overEl) {
+    var targetId=TD.overEl.id.replace('dr-'+type+'-','');
+    if(targetId && targetId!==id) reorder(id, targetId, type);
+    TD.overEl=null;
   }
-  touchDragId=null; touchDragType=null;
+  TD.id=null; TD.type=null;
 }
 
 // Settings
