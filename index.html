@@ -186,6 +186,20 @@ var SB = supabase.createClient(
 );
 var COLORS = ['#e74c3c','#e67e22','#f39c12','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#795548','#607d8b'];
 var stores=[], aisles=[], staples=[], items=[];
+
+// Audio feedback
+var audioCtx=null;
+function playPop(type) {
+  try {
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var osc=audioCtx.createOscillator();
+    var gain=audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type==='add') { osc.frequency.value=880; gain.gain.setValueAtTime(0.3,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.15); }
+    else if(type==='delete') { osc.frequency.value=330; gain.gain.setValueAtTime(0.25,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2); }
+    osc.start(); osc.stop(audioCtx.currentTime+0.2);
+  } catch(e) {}
+}
 var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null;
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
 var undoStack=null, undoTimer=null, skipRT=false;
@@ -385,7 +399,7 @@ async function addFromStaple(sid) {
   if(!s||!activeStore) return;
 
   // Feedback: vibrate + highlight chip
-  if(navigator.vibrate) navigator.vibrate(40);
+  playPop('add');
   var chip = document.getElementById('chip-'+sid);
   if(chip){ chip.classList.add('added'); setTimeout(function(){ chip.classList.remove('added'); },600); }
 
@@ -450,6 +464,7 @@ async function delItem(id) {
 async function clearChecked() {
   var si=items.filter(function(i){return i.store_id===activeStore&&i.checked;});
   if(!si.length) return;
+  playPop('delete');
   undoStack=si.map(function(it){return {id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};});
   pause(2000);
   var ids=si.map(function(i){return i.id;});
