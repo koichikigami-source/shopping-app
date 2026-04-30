@@ -213,30 +213,30 @@ var localOps={}; // track local op IDs to avoid RT echo
 
 async function boot() {
   await reload();
-  SB.channel('c1')
-    .on('postgres_changes',{event:'*',schema:'public', table:'shopping_items'},function(payload){
-      var id = (payload.new && payload.new.id) || (payload.old && payload.old.id);
-      if(payload.eventType==='INSERT' && payload.new){
-        var exists=false; for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){exists=true;break;}}
-        if(!exists) items.push(payload.new);
-      } else if(payload.eventType==='UPDATE' && payload.new){
-        var found=false; for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){items[i]=payload.new;found=true;break;}}
-        if(!found) items.push(payload.new);
-      } else if(payload.eventType==='DELETE' && payload.old){
-        items=items.filter(function(i){return i.id!==payload.old.id;});
+  // Single channel for all tables
+  SB.channel('app-changes')
+    .on('postgres_changes',{event:'*',schema:'public'},function(payload){
+      var tbl = payload.table;
+      if(tbl==='shopping_items'){
+        if(payload.eventType==='INSERT' && payload.new){
+          var exists=false;
+          for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){exists=true;break;}}
+          if(!exists) items.push(payload.new);
+        } else if(payload.eventType==='UPDATE' && payload.new){
+          var found=false;
+          for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){items[i]=payload.new;found=true;break;}}
+          if(!found) items.push(payload.new);
+        } else if(payload.eventType==='DELETE' && payload.old){
+          items=items.filter(function(i){return i.id!==payload.old.id;});
+        }
+        drawAll();
+      } else {
+        reload().then(function(){ drawAll(); });
       }
-      drawAll();
     })
-    .on('postgres_changes',{event:'*',schema:'public', table:'aisles'},function(){
-      reload().then(function(){ drawAll(); });
-    })
-    .on('postgres_changes',{event:'*',schema:'public', table:'stores'},function(){
-      reload().then(function(){ drawAll(); });
-    })
-    .on('postgres_changes',{event:'*',schema:'public', table:'staples'},function(){
-      reload().then(function(){ drawAll(); });
-    })
-    .subscribe();
+    .subscribe(function(status){
+      console.log('Realtime status:', status);
+    });
   drawAll();
 }
 
