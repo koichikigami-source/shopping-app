@@ -278,7 +278,7 @@ function drawMain() {
   if (!activeStore) { el.innerHTML = '<div class="empty">⚙️設定からスーパーを追加してください</div>'; return; }
   var sa = aisles.filter(function(a){ return a.store_id===activeStore; });
   var si = items.filter(function(i){ return i.store_id===activeStore; });
-  var ss = staples.filter(function(s){ for(var i=0;i<sa.length;i++){if(sa[i].id===s.aisle_id)return true;} return false; });
+  var ss = staples.filter(function(s){ for(var i=0;i<sa.length;i++){if(sa[i].id===s.aisle_id)return true;} return false; }).sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);});
   var hasChecked = si.some(function(i){ return i.checked; });
 
   var h = '';
