@@ -216,8 +216,6 @@ async function boot() {
   SB.channel('c1')
     .on('postgres_changes',{event:'*',schema:'public', table:'shopping_items'},function(payload){
       var id = (payload.new && payload.new.id) || (payload.old && payload.old.id);
-      // If this is echo of our own recent op, skip draw (state already updated locally)
-      if(id && localOps[id]) { delete localOps[id]; return; }
       if(payload.eventType==='INSERT' && payload.new){
         var exists=false; for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){exists=true;break;}}
         if(!exists) items.push(payload.new);
@@ -446,56 +444,64 @@ async function addFromStaple(sid) {
   drawAll();
 }
 
-async function togChk(id) {
+function togChk(id) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
-  // If checking off, save quantity to staple as last_qty
-  if(!it.checked && it.aisle_id) {
+  // Update locally FIRST for instant response
+  it.checked=!it.checked;
+  drawAll();
+  // Save last_qty to staple in background
+  if(it.checked && it.aisle_id) {
     for(var i=0;i<staples.length;i++){
       if(staples[i].name===it.name&&staples[i].aisle_id===it.aisle_id){
-        await SB.from('staples').update({last_qty:it.quantity}).eq('id',staples[i].id);
         staples[i].last_qty=it.quantity;
+        SB.from('staples').update({last_qty:it.quantity}).eq('id',staples[i].id);
         break;
       }
     }
   }
-  await SB.from('shopping_items').update({checked:!it.checked}).eq('id',id);
-  it.checked=!it.checked;
-  drawAll();
+  // Save to DB in background (no await)
+  SB.from('shopping_items').update({checked:it.checked}).eq('id',id);
 }
 
-async function chgQty(id, d) {
+function chgQty(id, d) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
   var nq=Math.max(1,it.quantity+d);
-  await SB.from('shopping_items').update({quantity:nq}).eq('id',id);
+  // Update locally FIRST for instant response
   it.quantity=nq;
   drawAll();
+  // Save to DB in background
+  SB.from('shopping_items').update({quantity:nq}).eq('id',id);
 }
 
-async function delItem(id) {
+function delItem(id) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
   undoStack=[{id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked}];
-  await SB.from('shopping_items').delete().eq('id',id);
+  // Remove locally FIRST for instant response
   items=items.filter(function(i){return i.id!==id;});
   drawAll();
   showUndo('「'+it.name+'」を削除');
+  // Delete from DB in background
+  SB.from('shopping_items').delete().eq('id',id);
 }
 
-async function clearChecked() {
+function clearChecked() {
   var si=items.filter(function(i){return i.store_id===activeStore&&i.checked;});
   if(!si.length) return;
   playPop('delete');
   undoStack=si.map(function(it){return {id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};});
   var ids=si.map(function(i){return i.id;});
-  await SB.from('shopping_items').delete().in('id',ids);
+  // Remove locally FIRST
   items=items.filter(function(i){return ids.indexOf(i.id)===-1;});
   drawAll();
   showUndo(si.length+'件の購入済みを削除');
+  // Delete from DB in background
+  SB.from('shopping_items').delete().in('id',ids);
 }
 
 function showUndo(msg) {
