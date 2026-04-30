@@ -329,6 +329,15 @@ function drawMain() {
       h += '<div class="a-cnt">'+done+'/'+ait.length+'</div>';
       h += '<div class="a-chev">▾</div></div>';
       h += '<div class="a-prog"><div class="a-prog-fill" style="width:'+pct+'%;background:'+aisle.color+'60"></div></div>';
+      // Sort items by staple sort_order
+      ait.sort(function(a,b){
+        var sa=9999,sb=9999;
+        for(var k=0;k<staples.length;k++){
+          if(staples[k].name===a.name&&staples[k].aisle_id===aisle.id) sa=staples[k].sort_order||9999;
+          if(staples[k].name===b.name&&staples[k].aisle_id===aisle.id) sb=staples[k].sort_order||9999;
+        }
+        return sa-sb;
+      });
       h += '<div class="a-body">';
       for (var ii=0;ii<ait.length;ii++) h += itemHTML(ait[ii]);
       h += '</div></div>';
