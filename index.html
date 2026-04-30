@@ -444,15 +444,16 @@ async function addFromStaple(sid) {
   drawAll();
 }
 
-function togChk(id) {
+async function togChk(id) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
-  // Update locally FIRST for instant response
-  it.checked=!it.checked;
+  var newChecked = !it.checked;
+  // Update locally FIRST for instant UI response
+  it.checked=newChecked;
   drawAll();
-  // Save last_qty to staple in background
-  if(it.checked && it.aisle_id) {
+  // Save last_qty to staple
+  if(newChecked && it.aisle_id) {
     for(var i=0;i<staples.length;i++){
       if(staples[i].name===it.name&&staples[i].aisle_id===it.aisle_id){
         staples[i].last_qty=it.quantity;
@@ -461,11 +462,11 @@ function togChk(id) {
       }
     }
   }
-  // Save to DB in background (no await)
-  SB.from('shopping_items').update({checked:it.checked}).eq('id',id);
+  // Save to DB
+  await SB.from('shopping_items').update({checked:newChecked}).eq('id',id);
 }
 
-function chgQty(id, d) {
+async function chgQty(id, d) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
@@ -473,11 +474,11 @@ function chgQty(id, d) {
   // Update locally FIRST for instant response
   it.quantity=nq;
   drawAll();
-  // Save to DB in background
-  SB.from('shopping_items').update({quantity:nq}).eq('id',id);
+  // Save to DB
+  await SB.from('shopping_items').update({quantity:nq}).eq('id',id);
 }
 
-function delItem(id) {
+async function delItem(id) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
@@ -486,11 +487,11 @@ function delItem(id) {
   items=items.filter(function(i){return i.id!==id;});
   drawAll();
   showUndo('「'+it.name+'」を削除');
-  // Delete from DB in background
-  SB.from('shopping_items').delete().eq('id',id);
+  // Delete from DB
+  await SB.from('shopping_items').delete().eq('id',id);
 }
 
-function clearChecked() {
+async function clearChecked() {
   var si=items.filter(function(i){return i.store_id===activeStore&&i.checked;});
   if(!si.length) return;
   playPop('delete');
@@ -500,8 +501,8 @@ function clearChecked() {
   items=items.filter(function(i){return ids.indexOf(i.id)===-1;});
   drawAll();
   showUndo(si.length+'件の購入済みを削除');
-  // Delete from DB in background
-  SB.from('shopping_items').delete().in('id',ids);
+  // Delete from DB
+  await SB.from('shopping_items').delete().in('id',ids);
 }
 
 function showUndo(msg) {
