@@ -114,8 +114,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 .mbtn-p{background:var(--gn);color:#fff;border-color:var(--gn);}
 #qty-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
 #qty-ov.open{opacity:1;pointer-events:all;}
-#qty-box{background:var(--w);border-radius:var(--r);padding:24px 20px;width:200px;text-align:center;}
-#qty-item-name{font-size:13px;color:var(--tx2);margin-bottom:12px;}
+#qty-box{background:var(--w);border-radius:var(--r);padding:20px;width:200px;text-align:center;}
+#qty-item-name{display:none;}
 #qty-inp{width:100%;border:1px solid var(--g2);border-radius:var(--rs);padding:10px;font-size:24px;text-align:center;outline:none;font-family:inherit;}
 #qty-inp:focus{border-color:var(--gn);}
 #qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
@@ -179,7 +179,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 <div id="qty-ov">
   <div id="qty-box">
     <div id="qty-item-name">数量</div>
-    <input id="qty-inp" type="number" inputmode="numeric" pattern="[0-9]*" autofocus min="1" value="1">
+    <input id="qty-inp" type="tel" inputmode="numeric" pattern="[0-9]*" min="1" value="1">
     <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
@@ -206,7 +206,7 @@ function playPop(type) {
     osc.start(); osc.stop(audioCtx.currentTime+0.2);
   } catch(e) {}
 }
-var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null;
+var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null, pendingStapleId=null;
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
 var undoStack=null, undoTimer=null;
 var localOps={}; // track local op IDs to avoid RT echo
@@ -439,21 +439,26 @@ async function doAdd() {
   inp.value=''; drawAll();
 }
 
-async function addFromStaple(sid) {
+function addFromStaple(sid) {
   var s=null;
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
 
-  var defaultQty = s.last_qty || 1;
-  var qtxt = prompt(s.name + ' の', defaultQty);
-  if(qtxt===null) return;
-  qtxt = String(qtxt).trim();
-  if(qtxt==='') return;
-  var qty = parseInt(qtxt, 10);
-  if(isNaN(qty) || qty < 1) {
-    alert('数量は1以上の数字で入力してください');
-    return;
-  }
+  pendingStapleId=sid;
+  qtyItemId=null;
+  document.getElementById('qty-inp').value=s.last_qty || 1;
+  document.getElementById('qty-ov').classList.add('open');
+
+  var inp=document.getElementById('qty-inp');
+  inp.focus();
+  inp.select();
+  setTimeout(function(){inp.focus(); inp.select();},50);
+}
+
+async function saveStapleQty(sid, qty) {
+  var s=null;
+  for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
+  if(!s||!activeStore) return;
 
   playPop('add');
 
@@ -469,10 +474,8 @@ async function addFromStaple(sid) {
     if(r.data) items.push(r.data);
   }
 
-  // 次回の初期値として保存
   s.last_qty = qty;
   SB.from('staples').update({last_qty:qty}).eq('id',s.id);
-
   drawAll();
 }
 
@@ -558,25 +561,32 @@ async function doUndo() {
 
 function openQty(id,name,qty){
   qtyItemId=id;
-  document.getElementById('qty-item-name').textContent=name;
+  pendingStapleId=null;
   document.getElementById('qty-inp').value=qty;
   document.getElementById('qty-ov').classList.add('open');
-  setTimeout(function(){document.getElementById('qty-inp').select();},100);
+  var inp=document.getElementById('qty-inp');
+  inp.focus();
+  inp.select();
+  setTimeout(function(){inp.focus(); inp.select();},50);
 }
 async function saveQty(){
-  var q=parseInt(document.getElementById('qty-inp').value)||1;
-  if(qtyItemId){
+  var q=Math.max(1, parseInt(document.getElementById('qty-inp').value,10)||1);
+  if(pendingStapleId){
+    await saveStapleQty(pendingStapleId, q);
+  } else if(qtyItemId){
     var it=null;
     for(var i=0;i<items.length;i++){if(items[i].id===qtyItemId){it=items[i];break;}}
     if(it){
-          await SB.from('shopping_items').update({quantity:Math.max(1,q)}).eq('id',qtyItemId);
-      it.quantity=Math.max(1,q);
+      await SB.from('shopping_items').update({quantity:q}).eq('id',qtyItemId);
+      it.quantity=q;
       drawAll();
     }
   }
-  document.getElementById('qty-ov').classList.remove('open'); qtyItemId=null;
+  document.getElementById('qty-ov').classList.remove('open');
+  qtyItemId=null;
+  pendingStapleId=null;
 }
-document.getElementById('qty-ov').addEventListener('click',function(e){if(e.target===document.getElementById('qty-ov'))document.getElementById('qty-ov').classList.remove('open');});
+document.getElementById('qty-ov').addEventListener('click',function(e){if(e.target===document.getElementById('qty-ov')){document.getElementById('qty-ov').classList.remove('open'); qtyItemId=null; pendingStapleId=null;}});
 document.getElementById('qty-inp').addEventListener('keydown',function(e){if(e.key==='Enter')saveQty();});
 
 function toggleMic(){
@@ -881,20 +891,6 @@ document.getElementById('back-btn').addEventListener('click',function(){
 boot();
 </script>
 
-<script>
-document.addEventListener('click', function(e){
-  const modal = document.querySelector('.quantity-modal, #quantityModal, .qty-modal');
-  if(modal){
-    setTimeout(() => {
-      const input = modal.querySelector('input[type="number"]');
-      if(input){
-        input.focus();
-        input.select();
-      }
-    }, 50);
-  }
-});
-</script>
 
 </body>
 </html>
