@@ -1,3 +1,33 @@
+ChatGPT
+
+
+
+
+貼り付けられたテキスト（1 点）(3).txt
+ドキュメント
+shopping appの修正をお願いします。
+定番リストから追加するときにタップするとJAPANZ KITCHENアプリと同じようにそのまま数量を入力できるようにしてください。そして追加後にリストの色が変わるようにしてください。 
+
+
+内容を確認して、今のshopping app側の「定番リスト追加」処理に合わせて、どこを差し替えればよいか具体的に出します。数量入力→追加済み色変更の流れにします。
+
+思考時間: 44s
+修正版を作りました。
+こちらを使ってください。
+
+shopping_app_fixed.html
+
+変更内容：
+
+定番リストをタップすると数量入力が出る
+
+入力した数量で追加／既存なら数量を上書き
+
+追加済みの定番アイテムは色が変わったまま表示
+
+元のコードでは一時的に色が変わって600msで戻る処理でした。
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -304,7 +334,17 @@ function drawMain() {
   h += '</div><div id="staple-chips">';
   var filtered = ss.filter(function(s){ return staplesCat===null||s.aisle_id===staplesCat; });
   if (!filtered.length) h += '<span style="color:var(--g3);font-size:13px;">定番アイテムがありません</span>';
-  for (var i=0;i<filtered.length;i++) h += '<div class="s-chip" id="chip-'+filtered[i].id+'" onclick="addFromStaple(\''+filtered[i].id+'\')">'+filtered[i].name+'</div>';
+  for (var i=0;i<filtered.length;i++) {
+    var st = filtered[i];
+    var alreadyAdded = false;
+    for (var j=0;j<items.length;j++) {
+      if (items[j].store_id===activeStore && items[j].name===st.name && items[j].aisle_id===st.aisle_id && !items[j].checked) {
+        alreadyAdded = true;
+        break;
+      }
+    }
+    h += '<div class="s-chip'+(alreadyAdded?' added':'')+'" id="chip-'+st.id+'" onclick="addFromStaple(\''+st.id+'\')">'+st.name+'</div>';
+  }
   h += '</div></div></div>';
 
   // Clear checked button
@@ -434,22 +474,35 @@ async function addFromStaple(sid) {
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
 
-  // Feedback: vibrate + highlight chip
+  var defaultQty = s.last_qty || 1;
+  var qtxt = prompt(s.name + ' の数量を入力してください', defaultQty);
+  if(qtxt===null) return;
+  qtxt = String(qtxt).trim();
+  if(qtxt==='') return;
+  var qty = parseInt(qtxt, 10);
+  if(isNaN(qty) || qty < 1) {
+    alert('数量は1以上の数字で入力してください');
+    return;
+  }
+
   playPop('add');
-  var chip = document.getElementById('chip-'+sid);
-  if(chip){ chip.classList.add('added'); setTimeout(function(){ chip.classList.remove('added'); },600); }
 
   var ex=null;
-  for(var i=0;i<items.length;i++){if(items[i].store_id===activeStore&&items[i].name===s.name&&!items[i].checked){ex=items[i];break;}}
+  for(var i=0;i<items.length;i++){
+    if(items[i].store_id===activeStore && items[i].name===s.name && items[i].aisle_id===s.aisle_id && !items[i].checked){ex=items[i];break;}
+  }
   if(ex){
-    await SB.from('shopping_items').update({quantity:ex.quantity+1}).eq('id',ex.id);
-    ex.quantity++;
+    await SB.from('shopping_items').update({quantity:qty}).eq('id',ex.id);
+    ex.quantity=qty;
   } else {
-    // Restore last quantity from staple
-    var lastQty = s.last_qty || 1;
-    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:lastQty,checked:false}).select().single();
+    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:qty,checked:false}).select().single();
     if(r.data) items.push(r.data);
   }
+
+  // 次回の初期値として保存
+  s.last_qty = qty;
+  SB.from('staples').update({last_qty:qty}).eq('id',s.id);
+
   drawAll();
 }
 
@@ -859,3 +912,4 @@ boot();
 </script>
 </body>
 </html>
+
