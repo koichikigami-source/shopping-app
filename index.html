@@ -179,7 +179,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 <div id="qty-ov">
   <div id="qty-box">
     <div id="qty-item-name">数量</div>
-    <input id="qty-inp" type="number" min="1" value="1">
+    <input id="qty-inp" type="number" inputmode="numeric" pattern="[0-9]*" autofocus min="1" value="1">
     <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
@@ -445,7 +445,7 @@ async function addFromStaple(sid) {
   if(!s||!activeStore) return;
 
   var defaultQty = s.last_qty || 1;
-  var qtxt = prompt(s.name + ' の数量を入力してください', defaultQty);
+  var qtxt = prompt(s.name + ' の', defaultQty);
   if(qtxt===null) return;
   qtxt = String(qtxt).trim();
   if(qtxt==='') return;
@@ -880,5 +880,21 @@ document.getElementById('back-btn').addEventListener('click',function(){
 
 boot();
 </script>
+
+<script>
+document.addEventListener('click', function(e){
+  const modal = document.querySelector('.quantity-modal, #quantityModal, .qty-modal');
+  if(modal){
+    setTimeout(() => {
+      const input = modal.querySelector('input[type="number"]');
+      if(input){
+        input.focus();
+        input.select();
+      }
+    }, 50);
+  }
+});
+</script>
+
 </body>
 </html>
