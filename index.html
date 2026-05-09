@@ -119,6 +119,18 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 #qty-inp{width:100%;border:1px solid var(--g2);border-radius:var(--rs);padding:10px;font-size:24px;text-align:center;outline:none;font-family:inherit;}
 #qty-inp:focus{border-color:var(--gn);}
 #qty-ok{margin-top:12px;width:100%;padding:10px;background:var(--gn);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500;}
+
+.setting-option{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bd);}
+.setting-option:last-child{border-bottom:none;}
+.setting-option-title{font-size:14px;font-weight:600;color:var(--tx);}
+.setting-option-sub{font-size:11px;color:var(--tx2);margin-top:2px;}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ddd;transition:.2s;border-radius:26px;}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:white;transition:.2s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.switch input:checked + .slider{background:var(--gn);}
+.switch input:checked + .slider:before{transform:translateX(20px);}
+
 </style>
 </head>
 <body>
@@ -135,7 +147,9 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
     <span class="back" id="back-btn">← 戻る</span>
     <span style="font-size:16px;font-weight:700;">設定</span>
   </div>
-  <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">スーパー・売り場</div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">アプリ設定</div>
+  <div class="set-card" id="app-settings"></div>
+  <div style="font-size:12px;color:var(--tx2);margin:16px 0 6px;">スーパー・売り場</div>
   <div class="set-card" id="store-settings"></div>
   <div style="font-size:12px;color:var(--tx2);margin:16px 0 6px;">定番リスト</div>
   <div class="set-card" id="staple-settings"></div>
@@ -207,6 +221,7 @@ function playPop(type) {
   } catch(e) {}
 }
 var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null, pendingStapleId=null;
+var stapleQtyPromptOff = localStorage.getItem('stapleQtyPromptOff') === '1';
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
 var undoStack=null, undoTimer=null;
 var localOps={}; // track local op IDs to avoid RT echo
@@ -444,6 +459,12 @@ function addFromStaple(sid) {
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
 
+  // 設定で「数量入力なし」がONの場合は、前回数量（なければ1）でそのまま追加
+  if(stapleQtyPromptOff){
+    saveStapleQty(sid, s.last_qty || 1);
+    return;
+  }
+
   pendingStapleId=sid;
   qtyItemId=null;
   document.getElementById('qty-inp').value=s.last_qty || 1;
@@ -479,6 +500,17 @@ async function saveStapleQty(sid, qty) {
   drawAll();
 }
 
+function saveLastQtyForItem(it){
+  if(!it || !it.aisle_id) return;
+  for(var i=0;i<staples.length;i++){
+    if(staples[i].name===it.name && staples[i].aisle_id===it.aisle_id){
+      staples[i].last_qty=it.quantity;
+      SB.from('staples').update({last_qty:it.quantity}).eq('id',staples[i].id);
+      break;
+    }
+  }
+}
+
 async function togChk(id) {
   var it=null;
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
@@ -487,16 +519,8 @@ async function togChk(id) {
   // Update locally FIRST for instant UI response
   it.checked=newChecked;
   drawAll();
-  // Save last_qty to staple
-  if(newChecked && it.aisle_id) {
-    for(var i=0;i<staples.length;i++){
-      if(staples[i].name===it.name&&staples[i].aisle_id===it.aisle_id){
-        staples[i].last_qty=it.quantity;
-        SB.from('staples').update({last_qty:it.quantity}).eq('id',staples[i].id);
-        break;
-      }
-    }
-  }
+  // チェックして消す前の数量を定番リスト側に保存
+  if(newChecked) saveLastQtyForItem(it);
   // Save to DB
   await SB.from('shopping_items').update({checked:newChecked}).eq('id',id);
 }
@@ -518,6 +542,8 @@ async function delItem(id) {
   for(var i=0;i<items.length;i++){if(items[i].id===id){it=items[i];break;}}
   if(!it) return;
   undoStack=[{id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked}];
+  // スワイプ削除でも数量を定番リスト側に残す
+  saveLastQtyForItem(it);
   // Remove locally FIRST for instant response
   items=items.filter(function(i){return i.id!==id;});
   drawAll();
@@ -532,6 +558,8 @@ async function clearChecked() {
   playPop('delete');
   undoStack=si.map(function(it){return {id:it.id,store_id:it.store_id,aisle_id:it.aisle_id,name:it.name,quantity:it.quantity,checked:it.checked};});
   var ids=si.map(function(i){return i.id;});
+  // 購入済みをまとめて消す時も数量を定番リスト側に残す
+  for(var i=0;i<si.length;i++) saveLastQtyForItem(si[i]);
   // Remove locally FIRST
   items=items.filter(function(i){return ids.indexOf(i.id)===-1;});
   drawAll();
@@ -806,7 +834,24 @@ function onTouchDragEnd(e, id, type) {
 }
 
 // Settings
+
+function drawAppSettings(){
+  var el=document.getElementById('app-settings');
+  if(!el) return;
+  el.innerHTML = '<div class="setting-option">' +
+    '<div><div class="setting-option-title">定番アイテムの数量入力なし</div>' +
+    '<div class="setting-option-sub">ONにすると、定番リストをタップしただけで前回数量のまま追加します</div></div>' +
+    '<label class="switch"><input type="checkbox" '+(stapleQtyPromptOff?'checked':'')+' onchange="toggleStapleQtyPrompt(this.checked)"><span class="slider"></span></label>' +
+    '</div>';
+}
+function toggleStapleQtyPrompt(on){
+  stapleQtyPromptOff = !!on;
+  localStorage.setItem('stapleQtyPromptOff', stapleQtyPromptOff ? '1' : '0');
+  drawAll();
+}
+
 function drawSettings() {
+  drawAppSettings();
   var se=document.getElementById('store-settings');
   var ste=document.getElementById('staple-settings');
   var h='';
