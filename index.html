@@ -183,6 +183,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
     <div class="m-title" id="staple-m-title">定番アイテムを追加</div>
     <div class="m-field"><div class="m-label">アイテム名</div><input class="m-inp" id="staple-name-inp" placeholder="例：玉ねぎ"></div>
     <div class="m-field"><div class="m-label">売り場</div><select class="m-inp" id="staple-aisle-inp"></select></div>
+    <div class="m-field">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <span class="m-label" style="margin:0;">数量入力なし</span>
+        <span class="switch"><input type="checkbox" id="staple-noqty-inp"><span class="slider"></span></span>
+      </label>
+    </div>
     <div class="m-acts">
       <button class="mbtn" onclick="closeOv('staple-ov')">キャンセル</button>
       <button class="mbtn mbtn-p" onclick="saveStaple()">保存</button>
@@ -221,12 +227,14 @@ function playPop(type) {
   } catch(e) {}
 }
 var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null, pendingStapleId=null;
-var stapleQtyPromptOff = localStorage.getItem('stapleQtyPromptOff') === '1';
+var stapleNoQtyMap = {};
+try { stapleNoQtyMap = JSON.parse(localStorage.getItem('stapleNoQtyMap') || '{}'); } catch(e) { stapleNoQtyMap = {}; }
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
 var undoStack=null, undoTimer=null;
 var localOps={}; // track local op IDs to avoid RT echo
 
 async function boot() {
+  localStorage.removeItem('stapleQtyPromptOff');
   await reload();
   // Single channel for all tables
   SB.channel('app-changes')
@@ -454,13 +462,27 @@ async function doAdd() {
   inp.value=''; drawAll();
 }
 
+function isStapleNoQty(s){
+  if(!s) return false;
+  return !!(s.no_qty_input || stapleNoQtyMap[s.id]);
+}
+function setStapleNoQty(id,on){
+  stapleNoQtyMap[id] = !!on;
+  if(!on) delete stapleNoQtyMap[id];
+  localStorage.setItem('stapleNoQtyMap', JSON.stringify(stapleNoQtyMap));
+  for(var i=0;i<staples.length;i++){
+    if(staples[i].id===id){ staples[i].no_qty_input=!!on; break; }
+  }
+  drawAll();
+}
+
 function addFromStaple(sid) {
   var s=null;
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
 
-  // 設定で「数量入力なし」がONの場合は、前回数量（なければ1）でそのまま追加
-  if(stapleQtyPromptOff){
+  // この定番アイテムだけ「数量入力なし」がONの場合は、前回数量（なければ1）でそのまま追加
+  if(isStapleNoQty(s)){
     saveStapleQty(sid, s.last_qty || 1);
     return;
   }
@@ -706,6 +728,7 @@ function openAddStaple(){
   editStapleId=null;
   document.getElementById('staple-m-title').textContent='定番アイテムを追加';
   document.getElementById('staple-name-inp').value='';
+  document.getElementById('staple-noqty-inp').checked=false;
   var sel=document.getElementById('staple-aisle-inp');
   sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'">'+aisles[i].name+'</option>';
   openOv('staple-ov');
@@ -715,6 +738,7 @@ function openEditStaple(id){
   editStapleId=id;
   document.getElementById('staple-m-title').textContent='定番アイテムを編集';
   document.getElementById('staple-name-inp').value=s.name;
+  document.getElementById('staple-noqty-inp').checked=isStapleNoQty(s);
   var sel=document.getElementById('staple-aisle-inp');
   sel.innerHTML=''; for(var i=0;i<aisles.length;i++) sel.innerHTML+='<option value="'+aisles[i].id+'"'+(aisles[i].id===s.aisle_id?' selected':'')+'>'+aisles[i].name+'</option>';
   openOv('staple-ov');
@@ -722,14 +746,23 @@ function openEditStaple(id){
 async function saveStaple(){
   var name=document.getElementById('staple-name-inp').value.trim();
   var aid=document.getElementById('staple-aisle-inp').value;
+  var noQty=document.getElementById('staple-noqty-inp').checked;
   if(!name||!aid) return;
   if(editStapleId){
     await SB.from('staples').update({name:name,aisle_id:aid}).eq('id',editStapleId);
-    for(var i=0;i<staples.length;i++){if(staples[i].id===editStapleId){staples[i].name=name;staples[i].aisle_id=aid;break;}}
+    for(var i=0;i<staples.length;i++){if(staples[i].id===editStapleId){staples[i].name=name;staples[i].aisle_id=aid;staples[i].no_qty_input=noQty;break;}}
+    stapleNoQtyMap[editStapleId]=!!noQty;
+    if(!noQty) delete stapleNoQtyMap[editStapleId];
+    localStorage.setItem('stapleNoQtyMap', JSON.stringify(stapleNoQtyMap));
   } else {
     var mx=0; for(var i=0;i<staples.length;i++){if(staples[i].aisle_id===aid&&(staples[i].sort_order||0)>mx)mx=staples[i].sort_order||0;}
     var r=await SB.from('staples').insert({aisle_id:aid,name:name,sort_order:mx+1}).select().single();
-    if(r.data) staples.push(r.data);
+    if(r.data){
+      r.data.no_qty_input=noQty;
+      staples.push(r.data);
+      if(noQty) stapleNoQtyMap[r.data.id]=true;
+      localStorage.setItem('stapleNoQtyMap', JSON.stringify(stapleNoQtyMap));
+    }
   }
   closeOv('staple-ov'); drawAll();
 }
@@ -838,16 +871,10 @@ function onTouchDragEnd(e, id, type) {
 function drawAppSettings(){
   var el=document.getElementById('app-settings');
   if(!el) return;
-  el.innerHTML = '<div class="setting-option">' +
-    '<div><div class="setting-option-title">定番アイテムの数量入力なし</div>' +
-    '<div class="setting-option-sub">ONにすると、定番リストをタップしただけで前回数量のまま追加します</div></div>' +
-    '<label class="switch"><input type="checkbox" '+(stapleQtyPromptOff?'checked':'')+' onchange="toggleStapleQtyPrompt(this.checked)"><span class="slider"></span></label>' +
-    '</div>';
-}
-function toggleStapleQtyPrompt(on){
-  stapleQtyPromptOff = !!on;
-  localStorage.setItem('stapleQtyPromptOff', stapleQtyPromptOff ? '1' : '0');
-  drawAll();
+  el.innerHTML = '';
+  el.style.display='none';
+  var label = el.previousElementSibling;
+  if(label) label.style.display='none';
 }
 
 function drawSettings() {
@@ -909,7 +936,8 @@ function drawSettings() {
       h+=' ondrop="onDrop(event,\''+s.id+'\',\'staple\')"';
       h+=' ondragend="onDragEnd(\''+s.id+'\',\'staple\')">';
       h+='<div class="drag-handle" ontouchstart="onTouchDragStart(event,\''+s.id+'\',\'staple\')" ontouchmove="onTouchDragMove(event,\''+s.id+'\',\'staple\')" ontouchend="onTouchDragEnd(event,\''+s.id+'\',\'staple\')">⠿</div>';
-      h+='<div class="set-name">'+s.name+'</div>';
+      h+='<div class="set-name">'+s.name+(isStapleNoQty(s)?'<span style="font-size:11px;color:var(--gn);margin-left:6px;">数量なし</span>':'')+'</div>';
+      h+='<label class="switch" title="数量入力なし"><input type="checkbox" '+(isStapleNoQty(s)?'checked':'')+' onchange="setStapleNoQty(\''+s.id+'\',this.checked)"><span class="slider"></span></label>';
       h+='<button class="ebtn" onclick="openEditStaple(\''+s.id+'\')">✏️</button>';
       h+='<button class="dbtn" onclick="deleteStaple(\''+s.id+'\')">✕</button>';
       h+='</div>';
