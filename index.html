@@ -390,6 +390,17 @@ function drawMain() {
   attachSwipe();
 }
 
+function itemIsNoQty(it){
+  if(!it) return false;
+  for(var i=0;i<staples.length;i++){
+    var s = staples[i];
+    if(s.name===it.name && s.aisle_id===it.aisle_id){
+      return isStapleNoQty(s);
+    }
+  }
+  return false;
+}
+
 function itemHTML(it) {
   var dc = it.checked ? ' done' : '';
   var fc = it.checked ? ' faded' : '';
@@ -397,12 +408,13 @@ function itemHTML(it) {
   var nm = it.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   var nmRaw = it.name.replace(/'/g,'&#39;');
   var qty = it.quantity;
+  var noQty = itemIsNoQty(it);
   var h = '<div class="iw" id="iw-'+id+'">';
   if (!it.checked) h += '<div class="del-bg" onclick="delItem(\''+id+'\')">削除</div>';
   h += '<div class="si'+fc+'" id="si-'+id+'">';
   h += '<div class="chk'+dc+'" onclick="togChk(\''+id+'\')">'+( it.checked?'✓':'' )+'</div>';
   h += '<div class="iname'+dc+'">'+nm+'</div>';
-  if (!it.checked) {
+  if (!it.checked && !noQty) {
     h += '<div class="qty-c">';
     h += '<button class="qbtn" onclick="chgQty(\''+id+'\',-1)">−</button>';
     h += '<div class="qnum" onclick="openQty(\''+id+'\',\''+nmRaw+'\','+qty+')">'+qty+'</div>';
