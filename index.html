@@ -227,6 +227,7 @@ function playPop(type) {
   } catch(e) {}
 }
 var activeStore=null, editAisleId=null, aisleStoreId=null, editStapleId=null, qtyItemId=null, pendingStapleId=null;
+var stapleAddLocks = {};
 var stapleNoQtyMap = {};
 try { stapleNoQtyMap = JSON.parse(localStorage.getItem('stapleNoQtyMap') || '{}'); } catch(e) { stapleNoQtyMap = {}; }
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
@@ -511,27 +512,67 @@ function addFromStaple(sid) {
 }
 
 async function saveStapleQty(sid, qty) {
+  if(stapleAddLocks[sid]) return;
+  stapleAddLocks[sid] = true;
+
   var s=null;
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
-  if(!s||!activeStore) return;
+  if(!s||!activeStore){ stapleAddLocks[sid]=false; return; }
 
+  qty = Math.max(1, parseFloat(qty) || 1);
   playPop('add');
 
-  var ex=null;
+  // 同じ店舗・同じ売り場・同じ名前・未チェックの品目は1件にまとめる
+  var matches=[];
   for(var i=0;i<items.length;i++){
-    if(items[i].store_id===activeStore && items[i].name===s.name && items[i].aisle_id===s.aisle_id && !items[i].checked){ex=items[i];break;}
-  }
-  if(ex){
-    await SB.from('shopping_items').update({quantity:qty}).eq('id',ex.id);
-    ex.quantity=qty;
-  } else {
-    var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:qty,checked:false}).select().single();
-    if(r.data) items.push(r.data);
+    if(items[i].store_id===activeStore && items[i].name===s.name && items[i].aisle_id===s.aisle_id && !items[i].checked){
+      matches.push(items[i]);
+    }
   }
 
-  s.last_qty = qty;
-  SB.from('staples').update({last_qty:qty}).eq('id',s.id);
-  drawAll();
+  try {
+    if(matches.length){
+      var keep = matches[0];
+      keep.quantity = qty;
+
+      // すでに重複していた場合は、1件だけ残して整理する
+      if(matches.length > 1){
+        var removeIds = matches.slice(1).map(function(x){return x.id;});
+        items = items.filter(function(x){return removeIds.indexOf(x.id) < 0;});
+        await SB.from('shopping_items').delete().in('id', removeIds);
+      }
+
+      await SB.from('shopping_items').update({quantity:qty}).eq('id',keep.id);
+    } else {
+      // DB保存前に仮追加して、連続タップでも2件作られないようにする
+      var tempId = 'temp-' + sid + '-' + Date.now();
+      var temp = {
+        id: tempId,
+        store_id: activeStore,
+        aisle_id: s.aisle_id,
+        name: s.name,
+        quantity: qty,
+        checked: false
+      };
+      items.push(temp);
+      drawAll();
+
+      var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:qty,checked:false}).select().single();
+      if(r.data){
+        for(var i=0;i<items.length;i++){
+          if(items[i].id===tempId){ items[i]=r.data; break; }
+        }
+      } else {
+        items = items.filter(function(x){return x.id!==tempId;});
+      }
+    }
+
+    s.last_qty = qty;
+    SB.from('staples').update({last_qty:qty}).eq('id',s.id);
+    drawAll();
+  } finally {
+    setTimeout(function(){ stapleAddLocks[sid]=false; }, 250);
+  }
 }
 
 function saveLastQtyForItem(it){
