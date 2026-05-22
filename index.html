@@ -199,7 +199,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 <div id="qty-ov">
   <div id="qty-box">
     <div id="qty-item-name">数量</div>
-    <input id="qty-inp" type="tel" inputmode="numeric" pattern="[0-9]*" min="1" value="1">
+    <input id="qty-inp" type="text" inputmode="numeric" pattern="[0-9]*" min="1" value="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
     <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
@@ -475,6 +475,26 @@ async function doAdd() {
   inp.value=''; drawAll();
 }
 
+function findActiveItemForStaple(s){
+  if(!s || !activeStore) return null;
+  for(var i=0;i<items.length;i++){
+    if(items[i].store_id===activeStore && items[i].name===s.name && items[i].aisle_id===s.aisle_id && !items[i].checked){
+      return items[i];
+    }
+  }
+  return null;
+}
+
+async function removeActiveItemForStaple(s){
+  var it = findActiveItemForStaple(s);
+  if(!it) return;
+  items = items.filter(function(x){ return x.id !== it.id; });
+  drawAll();
+  if(String(it.id).indexOf('temp-') !== 0){
+    await SB.from('shopping_items').delete().eq('id', it.id);
+  }
+}
+
 function isStapleNoQty(s){
   if(!s) return false;
   return !!(s.no_qty_input || stapleNoQtyMap[s.id]);
@@ -494,6 +514,13 @@ function addFromStaple(sid) {
   for(var i=0;i<staples.length;i++){if(staples[i].id===sid){s=staples[i];break;}}
   if(!s||!activeStore) return;
 
+  // すでにリストに上がって色が変わっている場合は、もう一度タップでリストから下げる
+  var existing = findActiveItemForStaple(s);
+  if(existing){
+    removeActiveItemForStaple(s);
+    return;
+  }
+
   // この定番アイテムだけ「数量入力なし」がONの場合は、前回数量（なければ1）でそのまま追加
   if(isStapleNoQty(s)){
     saveStapleQty(sid, s.last_qty || 1);
@@ -506,9 +533,14 @@ function addFromStaple(sid) {
   document.getElementById('qty-ov').classList.add('open');
 
   var inp=document.getElementById('qty-inp');
+  inp.setAttribute('readonly','readonly');
   inp.focus();
-  inp.select();
-  setTimeout(function(){inp.focus(); inp.select();},50);
+  setTimeout(function(){
+    inp.removeAttribute('readonly');
+    inp.focus();
+    inp.select();
+  },30);
+  setTimeout(function(){inp.focus(); inp.select();},80);
 }
 
 async function saveStapleQty(sid, qty) {
@@ -668,9 +700,14 @@ function openQty(id,name,qty){
   document.getElementById('qty-inp').value=qty;
   document.getElementById('qty-ov').classList.add('open');
   var inp=document.getElementById('qty-inp');
+  inp.setAttribute('readonly','readonly');
   inp.focus();
-  inp.select();
-  setTimeout(function(){inp.focus(); inp.select();},50);
+  setTimeout(function(){
+    inp.removeAttribute('readonly');
+    inp.focus();
+    inp.select();
+  },30);
+  setTimeout(function(){inp.focus(); inp.select();},80);
 }
 async function saveQty(){
   var q=Math.max(1, parseInt(document.getElementById('qty-inp').value,10)||1);
