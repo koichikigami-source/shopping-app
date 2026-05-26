@@ -199,7 +199,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
 <div id="qty-ov">
   <div id="qty-box">
     <div id="qty-item-name">数量</div>
-    <input id="qty-inp" type="tel" inputmode="numeric" pattern="[0-9]*" min="1" value="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" >
+    <input id="qty-inp" type="tel" inputmode="numeric" pattern="[0-9]*" min="1" value="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
     <button id="qty-ok" onclick="saveQty()">OK</button>
   </div>
 </div>
@@ -233,10 +233,35 @@ try { stapleNoQtyMap = JSON.parse(localStorage.getItem('stapleNoQtyMap') || '{}'
 var staplesOpen=false, staplesCat=null, isRec=false, recog=null;
 var undoStack=null, undoTimer=null;
 var localOps={}; // track local op IDs to avoid RT echo
+var reloadTimer=null;
+
+function timeoutPromise(ms, label){
+  return new Promise(function(_, reject){
+    setTimeout(function(){ reject(new Error((label || 'request') + ' timeout')); }, ms);
+  });
+}
+
+function withTimeout(promise, ms, label){
+  return Promise.race([promise, timeoutPromise(ms, label)]);
+}
+
+function scheduleReload(){
+  if(reloadTimer) clearTimeout(reloadTimer);
+  reloadTimer=setTimeout(function(){
+    reload().then(function(){ drawAll(); }).catch(function(err){
+      console.warn('reload skipped:', err && err.message ? err.message : err);
+    });
+  }, 350);
+}
 
 async function boot() {
   localStorage.removeItem('stapleQtyPromptOff');
-  await reload();
+  drawAll();
+  try {
+    await reload();
+  } catch(err) {
+    console.warn('initial reload failed:', err && err.message ? err.message : err);
+  }
   // Single channel for all tables
   SB.channel('app-changes')
     .on('postgres_changes',{event:'*',schema:'public'},function(payload){
@@ -244,7 +269,18 @@ async function boot() {
       if(tbl==='shopping_items'){
         if(payload.eventType==='INSERT' && payload.new){
           var exists=false;
-          for(var i=0;i<items.length;i++){if(items[i].id===payload.new.id){exists=true;break;}}
+          for(var i=0;i<items.length;i++){
+            if(items[i].id===payload.new.id){exists=true;break;}
+            if(String(items[i].id).indexOf('temp-')===0 &&
+               items[i].store_id===payload.new.store_id &&
+               items[i].aisle_id===payload.new.aisle_id &&
+               items[i].name===payload.new.name &&
+               !items[i].checked){
+              items[i]=payload.new;
+              exists=true;
+              break;
+            }
+          }
           if(!exists) items.push(payload.new);
         } else if(payload.eventType==='UPDATE' && payload.new){
           var found=false;
@@ -255,7 +291,7 @@ async function boot() {
         }
         drawAll();
       } else {
-        reload().then(function(){ drawAll(); });
+        scheduleReload();
       }
     })
     .subscribe(function(status){
@@ -266,15 +302,17 @@ async function boot() {
 
 async function reload() {
   var r = await Promise.all([
-    SB.from('stores').select('*').order('sort_order'),
-    SB.from('aisles').select('*').order('sort_order'),
-    SB.from('staples').select('*').order('sort_order'),
-    SB.from('shopping_items').select('*').order('created_at')
+    withTimeout(SB.from('stores').select('*').order('sort_order'), 8000, 'stores'),
+    withTimeout(SB.from('aisles').select('*').order('sort_order'), 8000, 'aisles'),
+    withTimeout(SB.from('staples').select('*').order('sort_order'), 8000, 'staples'),
+    withTimeout(SB.from('shopping_items').select('*').order('created_at'), 8000, 'shopping_items')
   ]);
-  stores  = r[0].data || [];
-  aisles  = r[1].data || [];
-  staples = r[2].data || [];
-  items   = r[3].data || [];
+
+  stores  = r[0].data || stores || [];
+  aisles  = r[1].data || aisles || [];
+  staples = r[2].data || staples || [];
+  items   = r[3].data || items || [];
+
   if (!activeStore && stores.length) activeStore = stores[0].id;
 }
 
@@ -566,10 +604,10 @@ async function saveStapleQty(sid, qty) {
       if(matches.length > 1){
         var removeIds = matches.slice(1).map(function(x){return x.id;});
         items = items.filter(function(x){return removeIds.indexOf(x.id) < 0;});
-        await SB.from('shopping_items').delete().in('id', removeIds);
+        await withTimeout(SB.from('shopping_items').delete().in('id', removeIds), 8000, 'delete duplicated items');
       }
 
-      await SB.from('shopping_items').update({quantity:qty}).eq('id',keep.id);
+      await withTimeout(SB.from('shopping_items').update({quantity:qty}).eq('id',keep.id), 8000, 'update item quantity');
     } else {
       // DB保存前に仮追加して、連続タップでも2件作られないようにする
       var tempId = 'temp-' + sid + '-' + Date.now();
@@ -584,7 +622,7 @@ async function saveStapleQty(sid, qty) {
       items.push(temp);
       drawAll();
 
-      var r=await SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:qty,checked:false}).select().single();
+      var r=await withTimeout(SB.from('shopping_items').insert({store_id:activeStore,aisle_id:s.aisle_id,name:s.name,quantity:qty,checked:false}).select().single(), 8000, 'insert shopping item');
       if(r.data){
         for(var i=0;i<items.length;i++){
           if(items[i].id===tempId){ items[i]=r.data; break; }
@@ -596,6 +634,9 @@ async function saveStapleQty(sid, qty) {
 
     s.last_qty = qty;
     SB.from('staples').update({last_qty:qty}).eq('id',s.id);
+    drawAll();
+  } catch(err) {
+    console.warn('saveStapleQty failed:', err && err.message ? err.message : err);
     drawAll();
   } finally {
     setTimeout(function(){ stapleAddLocks[sid]=false; }, 250);
